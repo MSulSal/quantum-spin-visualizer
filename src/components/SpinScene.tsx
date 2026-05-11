@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Pause, Play, RotateCcw } from "lucide-react";
-import type { Particle } from "../data/particles";
+import type { Particle } from "../data/particles.ts";
 import {
 	bivectorFromAxis,
 	formatMultivector,
@@ -101,7 +101,7 @@ function drawPlane(
 	ctx.save();
 	ctx.translate(center.x, center.y);
 	ctx.rotate(angle * 0.5);
-	ctx.globalAlpha = 0.18;
+	ctx.globalAlpha = 0.12;
 	ctx.fillStyle = color;
 	ctx.strokeStyle = color;
 	ctx.lineWidth = 1.5;
@@ -109,8 +109,122 @@ function drawPlane(
 	ctx.beginPath();
 	ctx.ellipse(0, 0, radius * 1.35, radius * 0.58, -0.55, 0, Math.PI * 2);
 	ctx.fill();
-	ctx.globalAlpha = 0.55;
+	ctx.globalAlpha = 0.5;
 	ctx.stroke();
+
+	ctx.restore();
+}
+
+function drawRotorDial(
+	ctx: CanvasRenderingContext2D,
+	x: number,
+	y: number,
+	radius: number,
+	angle: number,
+	label: string,
+	subLabel: string,
+	color: string,
+) {
+	ctx.save();
+
+	ctx.strokeStyle = "rgba(148, 163, 184, 0.35)";
+	ctx.lineWidth = 1;
+	ctx.beginPath();
+	ctx.arc(x, y, radius, 0, Math.PI * 2);
+	ctx.stroke();
+
+	ctx.strokeStyle = color;
+	ctx.lineWidth = 3;
+	ctx.beginPath();
+	ctx.arc(x, y, radius, -Math.PI / 2, -Math.PI / 2 + angle);
+	ctx.stroke();
+
+	const needle = -Math.PI / 2 + angle;
+
+	ctx.fillStyle = color;
+	ctx.beginPath();
+	ctx.arc(
+		x + Math.cos(needle) * radius,
+		y + Math.sin(needle) * radius,
+		4,
+		0,
+		Math.PI * 2,
+	);
+	ctx.fill();
+
+	ctx.fillStyle = "#f8fafc";
+	ctx.font = "700 13px ui-monospace, SFMono-Regular, Menlo, monospace";
+	ctx.textAlign = "center";
+	ctx.fillText(label, x, y + radius + 22);
+
+	ctx.fillStyle = "#94a3b8";
+	ctx.font = "11px ui-monospace, SFMono-Regular, Menlo, monospace";
+	ctx.fillText(subLabel, x, y + radius + 38);
+
+	ctx.restore();
+}
+
+function drawSandwichDiagram(
+	ctx: CanvasRenderingContext2D,
+	width: number,
+	height: number,
+	angle: number,
+	spin: Particle["spin"],
+) {
+	const boxWidth = Math.min(460, width - 32);
+	const boxHeight = 112;
+	const x = width / 2 - boxWidth / 2;
+	const y = height - boxHeight - 18;
+
+	ctx.save();
+
+	ctx.fillStyle = "rgba(2, 6, 23, 0.78)";
+	ctx.strokeStyle = "rgba(148, 163, 184, 0.22)";
+	ctx.lineWidth = 1;
+	ctx.beginPath();
+	ctx.roundRect(x, y, boxWidth, boxHeight, 18);
+	ctx.fill();
+	ctx.stroke();
+
+	if (spin === 0) {
+		ctx.fillStyle = "#f8fafc";
+		ctx.font = "700 15px ui-monospace, SFMono-Regular, Menlo, monospace";
+		ctx.textAlign = "center";
+		ctx.fillText("s′ = s", width / 2, y + 46);
+
+		ctx.fillStyle = "#94a3b8";
+		ctx.font = "12px ui-sans-serif, system-ui";
+		ctx.fillText(
+			"spin-0 scalar state is invariant under spatial rotation",
+			width / 2,
+			y + 70,
+		);
+		ctx.restore();
+		return;
+	}
+
+	const halfAngle = angle / 2;
+	const leftX = x + 72;
+	const rightX = x + boxWidth - 72;
+	const centerX = x + boxWidth / 2;
+	const centerY = y + 42;
+
+	drawRotorDial(ctx, leftX, centerY, 22, -halfAngle, "R", "−θ/2", "#a78bfa");
+
+	drawRotorDial(ctx, rightX, centerY, 22, halfAngle, "R̃", "+θ/2", "#22d3ee");
+
+	ctx.fillStyle = "#f8fafc";
+	ctx.font = "800 19px ui-monospace, SFMono-Regular, Menlo, monospace";
+	ctx.textAlign = "center";
+	ctx.fillText("v′ = R v R̃", centerX, centerY + 6);
+
+	ctx.fillStyle = "#94a3b8";
+	ctx.font = "12px ui-sans-serif, system-ui";
+	ctx.fillText(
+		"the vector is sandwiched between two half-angle rotor actions",
+		centerX,
+		y + 88,
+	);
 
 	ctx.restore();
 }
@@ -133,10 +247,7 @@ export function SpinScene({ particle }: SpinSceneProps) {
 			return rotorFromPlaneAngle(plane, 0);
 		}
 
-		return rotorFromPlaneAngle(
-			plane,
-			particle.spin === 0.5 ? angle : angle * 2,
-		);
+		return rotorFromPlaneAngle(plane, angle);
 	}, [angle, particle.spin, plane]);
 
 	const rotatedVector = useMemo(() => {
@@ -144,15 +255,8 @@ export function SpinScene({ particle }: SpinSceneProps) {
 			return referenceVector;
 		}
 
-		if (particle.spin === 1) {
-			return rotateVector(
-				referenceVector,
-				rotorFromPlaneAngle(plane, angle),
-			);
-		}
-
 		return rotateVector(referenceVector, rotor);
-	}, [angle, particle.spin, plane, rotor]);
+	}, [particle.spin, rotor]);
 
 	useEffect(() => {
 		if (!isPlaying) return;
@@ -211,12 +315,12 @@ export function SpinScene({ particle }: SpinSceneProps) {
 
 		currentContext.clearRect(0, 0, width, height);
 
-		const origin = project({ x: 0, y: 0, z: 0 }, width, height);
+		const origin = project({ x: 0, y: -0.12, z: 0 }, width, height);
 
 		const basis = [
-			{ v: { x: 1.18, y: 0, z: 0 }, label: "e₁", color: "#8b5cf6" },
-			{ v: { x: 0, y: 1.18, z: 0 }, label: "e₂", color: "#22d3ee" },
-			{ v: { x: 0, y: 0, z: 1.18 }, label: "e₃", color: "#f97316" },
+			{ v: { x: 1.18, y: -0.12, z: 0 }, label: "e₁", color: "#8b5cf6" },
+			{ v: { x: 0, y: 1.06, z: 0 }, label: "e₂", color: "#22d3ee" },
+			{ v: { x: 0, y: -0.12, z: 1.18 }, label: "e₃", color: "#f97316" },
 		];
 
 		currentContext.save();
@@ -228,7 +332,7 @@ export function SpinScene({ particle }: SpinSceneProps) {
 			height / 2,
 			Math.max(width, height) * 0.55,
 		);
-		gradient.addColorStop(0, "rgba(148, 163, 184, 0.12)");
+		gradient.addColorStop(0, "rgba(148, 163, 184, 0.1)");
 		gradient.addColorStop(1, "rgba(15, 23, 42, 0)");
 		currentContext.fillStyle = gradient;
 		currentContext.fillRect(0, 0, width, height);
@@ -250,8 +354,16 @@ export function SpinScene({ particle }: SpinSceneProps) {
 		drawArrow(
 			currentContext,
 			origin,
-			project(referenceVector, width, height),
-			"rgba(255,255,255,0.45)",
+			project(
+				{
+					x: referenceVector.x,
+					y: referenceVector.y - 0.12,
+					z: referenceVector.z,
+				},
+				width,
+				height,
+			),
+			"rgba(255,255,255,0.42)",
 			2,
 			"v",
 		);
@@ -259,7 +371,15 @@ export function SpinScene({ particle }: SpinSceneProps) {
 		drawArrow(
 			currentContext,
 			origin,
-			project(rotatedVector, width, height),
+			project(
+				{
+					x: rotatedVector.x,
+					y: rotatedVector.y - 0.12,
+					z: rotatedVector.z,
+				},
+				width,
+				height,
+			),
 			particle.spin === 0.5
 				? "#34d399"
 				: particle.spin === 1
@@ -269,7 +389,11 @@ export function SpinScene({ particle }: SpinSceneProps) {
 			particle.spin === 0 ? "s" : "v′",
 		);
 
-		const axisTip = project(axis, width, height);
+		const axisTip = project(
+			{ x: axis.x, y: axis.y - 0.12, z: axis.z },
+			width,
+			height,
+		);
 
 		drawArrow(
 			currentContext,
@@ -281,7 +405,7 @@ export function SpinScene({ particle }: SpinSceneProps) {
 		);
 
 		currentContext.save();
-		currentContext.strokeStyle = "rgba(255,255,255,0.22)";
+		currentContext.strokeStyle = "rgba(255,255,255,0.18)";
 		currentContext.lineWidth = 1;
 		currentContext.setLineDash([6, 8]);
 		currentContext.beginPath();
@@ -294,23 +418,32 @@ export function SpinScene({ particle }: SpinSceneProps) {
 		);
 		currentContext.stroke();
 		currentContext.restore();
+
+		drawSandwichDiagram(
+			currentContext,
+			width,
+			height,
+			angle,
+			particle.spin,
+		);
 	}, [angle, particle.spin, rotatedVector]);
 
 	const degrees = (angle * 180) / Math.PI;
 	const displayAngle = Math.round(degrees);
 	const sign = particle.spin === 0.5 ? spinorSign(angle) : "+state";
+	const halfAngleDegrees = Math.round(displayAngle / 2);
 	const rotorLabel =
 		particle.spin === 0
 			? "scalar invariant"
 			: particle.spin === 1
-				? "vector-like 360° return"
+				? `R uses ±${halfAngleDegrees}° in the sandwich`
 				: formatMultivector(rotor);
 
 	return (
 		<section className="glass-panel spin-scene">
 			<div className="scene-header">
 				<div>
-					<p className="eyebrow">Rotor animation</p>
+					<p className="eyebrow">Rotor sandwich</p>
 					<h2>
 						{particle.spin === 0.5
 							? "Spinor double-cover"
@@ -321,7 +454,7 @@ export function SpinScene({ particle }: SpinSceneProps) {
 				</div>
 
 				<div className="angle-badge">
-					<span>{displayAngle}°</span>
+					<span>{displayAngle}° rotation</span>
 					<strong>{sign}</strong>
 				</div>
 			</div>
@@ -361,11 +494,9 @@ export function SpinScene({ particle }: SpinSceneProps) {
 
 			<div className="formula-strip">
 				<code>
-					{particle.spin === 0.5
-						? "R = e^{-Bθ/2},  v′ = RvR̃"
-						: particle.spin === 1
-							? "v′ = RvR̃,  360° return"
-							: "s′ = s"}
+					{particle.spin === 0
+						? "s′ = s"
+						: "v′ = RvR̃,   R = e^{-Bθ/2},   R̃ = e^{Bθ/2}"}
 				</code>
 				<span>{rotorLabel}</span>
 			</div>

@@ -1,4 +1,4 @@
-import type { Particle } from "../data/particles";
+import type { Particle } from "../data/particles.ts";
 
 type StandardModelChartProps = {
 	particles: Particle[];
@@ -6,81 +6,124 @@ type StandardModelChartProps = {
 	onSelectParticle: (id: string) => void;
 };
 
-const groups = [
+type ChartRow = {
+	label: string;
+	className: string;
+	cells: Array<string | null>;
+};
+
+const chartRows: ChartRow[] = [
 	{
-		title: "Quarks",
-		category: "quark",
-		description: "Spin-1/2 fermions with color charge.",
+		label: "up-type quarks",
+		className: "quark-row",
+		cells: ["up", "charm", "top", "gluon"],
 	},
 	{
-		title: "Leptons",
-		category: "lepton",
-		description: "Spin-1/2 fermions without color charge.",
+		label: "down-type quarks",
+		className: "quark-row",
+		cells: ["down", "strange", "bottom", "photon"],
 	},
 	{
-		title: "Gauge Bosons",
-		category: "gauge-boson",
-		description: "Spin-1 force carriers.",
+		label: "neutrinos",
+		className: "lepton-row",
+		cells: [
+			"electron-neutrino",
+			"muon-neutrino",
+			"tau-neutrino",
+			"z-boson",
+		],
 	},
 	{
-		title: "Scalar Boson",
-		category: "scalar-boson",
-		description: "Spin-0 scalar behavior.",
+		label: "charged leptons",
+		className: "lepton-row",
+		cells: ["electron", "muon", "tau", "w-boson"],
 	},
-] as const;
+	{
+		label: "scalar",
+		className: "scalar-row",
+		cells: [null, null, null, "higgs"],
+	},
+];
+
+const columnHeaders = ["I", "II", "III", "Bosons"];
 
 export function StandardModelChart({
 	particles,
 	selectedId,
 	onSelectParticle,
 }: StandardModelChartProps) {
+	const particleById = new Map(
+		particles.map(particle => [particle.id, particle]),
+	);
+
 	return (
-		<section className="chart-shell" aria-label="Standard Model particles">
-			{groups.map(group => {
-				const groupParticles = particles.filter(
-					particle => particle.category === group.category,
-				);
+		<div
+			className="standard-model-chart"
+			aria-label="Interactive Standard Model chart"
+		>
+			<div className="chart-title-row">
+				<div className="chart-corner">Fermions</div>
 
-				return (
-					<div
-						className={`particle-group ${group.category}`}
-						key={group.category}
-					>
-						<div className="group-heading">
-							<h2>{group.title}</h2>
-							<p>{group.description}</p>
-						</div>
-
-						<div className="particle-grid">
-							{groupParticles.map(particle => (
-								<button
-									className={`particle-card ${particle.category} ${
-										particle.id === selectedId
-											? "selected"
-											: ""
-									}`}
-									key={particle.id}
-									onClick={() =>
-										onSelectParticle(particle.id)
-									}
-									type="button"
-								>
-									<span className="particle-symbol">
-										{particle.symbol}
-									</span>
-									<span className="particle-name">
-										{particle.name}
-									</span>
-									<span className="particle-meta">
-										spin {particle.spin} · charge{" "}
-										{particle.charge}
-									</span>
-								</button>
-							))}
-						</div>
+				{columnHeaders.map(header => (
+					<div className="chart-column-heading" key={header}>
+						{header}
 					</div>
-				);
-			})}
-		</section>
+				))}
+			</div>
+
+			{chartRows.map(row => (
+				<div className={`chart-row ${row.className}`} key={row.label}>
+					<div className="chart-row-label">{row.label}</div>
+
+					{row.cells.map((particleId, index) => {
+						if (!particleId) {
+							return (
+								<div
+									className="particle-slot empty"
+									key={`${row.label}-${index}`}
+								/>
+							);
+						}
+
+						const particle = particleById.get(particleId);
+
+						if (!particle) {
+							return (
+								<div
+									className="particle-slot empty"
+									key={particleId}
+								/>
+							);
+						}
+
+						return (
+							<button
+								className={`sm-particle-card ${particle.category} ${
+									particle.id === selectedId ? "selected" : ""
+								}`}
+								key={particle.id}
+								onClick={() => onSelectParticle(particle.id)}
+								type="button"
+							>
+								<span className="sm-symbol">
+									{particle.symbol}
+								</span>
+								<span className="sm-name">{particle.name}</span>
+								<span className="sm-meta">
+									spin {particle.spin} · q {particle.charge}
+								</span>
+							</button>
+						);
+					})}
+				</div>
+			))}
+
+			<div className="chart-legend">
+				<span className="legend-item quark-dot">quarks</span>
+				<span className="legend-item lepton-dot">leptons</span>
+				<span className="legend-item boson-dot">gauge bosons</span>
+				<span className="legend-item scalar-dot">scalar boson</span>
+			</div>
+		</div>
 	);
 }
