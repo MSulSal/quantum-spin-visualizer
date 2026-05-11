@@ -654,7 +654,6 @@ function getSpinorCopy(spin: Particle["spin"], angle: number) {
 		return {
 			status: "s",
 			substatus: "invariant",
-			description: "Spin-0 has no spinor sign flip.",
 			returnCopy: "scalar: unchanged by rotation",
 		};
 	}
@@ -663,8 +662,6 @@ function getSpinorCopy(spin: Particle["spin"], angle: number) {
 		return {
 			status: "state",
 			substatus: degrees >= 350 ? "returned" : "one turn",
-			description:
-				"This simplified spin-1 view returns after one 360° rotation.",
 			returnCopy:
 				degrees >= 350
 					? "integer spin: returned after 360°"
@@ -901,9 +898,12 @@ export function SpinScene({ particle }: SpinSceneProps) {
 				</div>
 
 				<div className="spinor-equation-card">
-					<span>Spinor state</span>
+					<span>
+						{particle.spin === 0.5
+							? "Spinor state"
+							: "Rotation state"}
+					</span>
 					<code>{spinorEquation}</code>
-					<p>{spinorCopy.description}</p>
 				</div>
 
 				<div className="angle-badge">
