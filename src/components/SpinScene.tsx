@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Pause, Play, RotateCcw } from "lucide-react";
+import { Pause, Play, RotateCcw, ChevronDown } from "lucide-react";
 import type { Particle } from "../data/particles.ts";
 import {
 	bivectorFromAxis,
@@ -697,6 +697,7 @@ export function SpinScene({ particle }: SpinSceneProps) {
 	const frameRef = useRef<number | null>(null);
 	const [isPlaying, setIsPlaying] = useState(true);
 	const [angle, setAngle] = useState(0);
+	const [isInfoOpen, setIsInfoOpen] = useState(false);
 
 	const angleLimit = getAngleLimit(particle.spin);
 	const plane = useMemo(() => bivectorFromAxis(axis), []);
@@ -885,32 +886,63 @@ export function SpinScene({ particle }: SpinSceneProps) {
 
 	return (
 		<section className="glass-panel spin-scene">
-			<div className="scene-header">
-				<div className="scene-title">
-					<p className="eyebrow">Rotor sandwich</p>
-					<h2>
-						{particle.spin === 0.5
-							? "Spinor double-cover"
-							: particle.spin === 1
-								? "Integer-spin return"
-								: "Scalar invariance"}
-					</h2>
-				</div>
+			<div
+				className={`scene-header ${isInfoOpen ? "open" : "collapsed"}`}
+			>
+				<button
+					className="scene-header-toggle"
+					type="button"
+					onClick={() => setIsInfoOpen(value => !value)}
+					aria-expanded={isInfoOpen}
+				>
+					<div>
+						<p className="eyebrow">Rotor sandwich</p>
+						<strong>
+							{particle.spin === 0.5
+								? "Spinor double-cover"
+								: particle.spin === 1
+									? "Integer-spin return"
+									: "Scalar invariance"}
+						</strong>
+					</div>
 
-				<div className="spinor-equation-card">
-					<span>
-						{particle.spin === 0.5
-							? "Spinor state"
-							: "Rotation state"}
-					</span>
-					<code>{spinorEquation}</code>
-				</div>
+					<div className="scene-header-summary">
+						<code>{spinorEquation}</code>
+						<span>{degrees}°</span>
+					</div>
 
-				<div className="angle-badge">
-					<span>{degrees}° rotation</span>
-					<strong>{spinorCopy.status}</strong>
-					<em>{spinorCopy.substatus}</em>
-				</div>
+					<ChevronDown size={16} />
+				</button>
+
+				{isInfoOpen && (
+					<div className="scene-header-content">
+						<div className="scene-title">
+							<p className="eyebrow">Rotor sandwich</p>
+							<h2>
+								{particle.spin === 0.5
+									? "Spinor double-cover"
+									: particle.spin === 1
+										? "Integer-spin return"
+										: "Scalar invariance"}
+							</h2>
+						</div>
+
+						<div className="spinor-equation-card">
+							<span>
+								{particle.spin === 0.5
+									? "Spinor state"
+									: "State"}
+							</span>
+							<code>{spinorEquation}</code>
+						</div>
+
+						<div className="angle-badge">
+							<span>{degrees}° rotation</span>
+							<strong>{spinorCopy.status}</strong>
+							<em>{spinorCopy.substatus}</em>
+						</div>
+					</div>
+				)}
 			</div>
 
 			<div className="canvas-wrap">
