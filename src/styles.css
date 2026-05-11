@@ -161,7 +161,7 @@ code {
 .eyebrow {
 	color: #93c5fd;
 	font-size: 0.68rem;
-	font-weight: 850;
+	font-weight: 600;
 }
 
 .header-thesis strong {
@@ -675,8 +675,11 @@ code {
 
 .sandwich-readout {
 	display: grid;
-	grid-template-columns: 86px minmax(0, 1fr) 86px;
-	gap: 8px;
+	grid-template-columns: minmax(112px, 0.74fr) minmax(178px, 1fr) minmax(
+			112px,
+			0.74fr
+		);
+	gap: 10px;
 	align-items: stretch;
 	margin-top: 8px;
 }
@@ -684,12 +687,16 @@ code {
 .rotor-chip,
 .vector-chip {
 	display: grid;
-	min-height: 52px;
-	place-items: center;
-	gap: 2px;
+	grid-template-rows: auto auto;
+	align-content: center;
+	justify-items: center;
+	min-width: 0;
+	min-height: 56px;
+	padding: 10px 18px 11px;
 	border: 1px solid rgba(148, 163, 184, 0.22);
 	border-radius: 8px;
 	background: #090b12;
+	text-align: center;
 }
 
 .rotor-chip.left {
@@ -708,23 +715,36 @@ code {
 .vector-chip {
 	border-color: rgba(52, 211, 153, 0.24);
 	color: var(--boson);
+	padding-inline: 22px;
 }
 
 .rotor-symbol {
+	display: block;
+	width: 100%;
 	color: var(--text);
 	font-family:
 		ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
 		"Liberation Mono", monospace;
 	font-size: 1rem;
 	font-weight: 800;
+	line-height: 1.05;
+	white-space: nowrap;
 }
 
 .rotor-angle {
+	display: block;
+	width: 100%;
+	margin-top: 5px;
+	overflow: hidden;
 	color: var(--muted);
 	font-family:
 		ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
 		"Liberation Mono", monospace;
 	font-size: 0.72rem;
+	font-weight: 650;
+	line-height: 1.15;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }
 
 .spin-state-readout {
@@ -901,6 +921,16 @@ code {
 	.sandwich-readout,
 	.spin-state-readout {
 		grid-template-columns: 1fr;
+	}
+
+	.rotor-chip,
+	.vector-chip {
+		min-height: 50px;
+		padding: 9px 14px;
+	}
+
+	.vector-chip {
+		padding-inline: 16px;
 	}
 
 	.sm-particle-card {
