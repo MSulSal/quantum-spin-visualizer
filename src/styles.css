@@ -161,7 +161,7 @@ code {
 .eyebrow {
 	color: #93c5fd;
 	font-size: 0.68rem;
-	font-weight: 600;
+	font-weight: 850;
 }
 
 .header-thesis strong {
@@ -467,6 +467,14 @@ code {
 	overflow: auto;
 }
 
+.fact-panel-toggle {
+	display: none;
+}
+
+.fact-panel-content {
+	display: block;
+}
+
 .fact-panel p,
 .education-panel p {
 	color: var(--muted);
@@ -500,19 +508,23 @@ code {
 	text-align: center;
 }
 
-.particle-emblem.quark {
+.particle-emblem.quark,
+.fact-toggle-symbol.quark {
 	color: var(--quark);
 }
 
-.particle-emblem.lepton {
+.particle-emblem.lepton,
+.fact-toggle-symbol.lepton {
 	color: var(--lepton);
 }
 
-.particle-emblem.gauge-boson {
+.particle-emblem.gauge-boson,
+.fact-toggle-symbol.gauge-boson {
 	color: var(--boson);
 }
 
-.particle-emblem.scalar-boson {
+.particle-emblem.scalar-boson,
+.fact-toggle-symbol.scalar-boson {
 	color: var(--scalar);
 }
 
@@ -571,69 +583,6 @@ code {
 
 .scene-header {
 	display: grid;
-	gap: 8px;
-}
-
-.scene-header-toggle {
-	display: grid;
-	grid-template-columns: minmax(0, 1fr) auto auto;
-	gap: 12px;
-	align-items: center;
-	width: 100%;
-	border: 1px solid var(--border);
-	border-radius: 8px;
-	background: #090b12;
-	color: var(--text);
-	padding: 9px 11px;
-	text-align: left;
-}
-
-.scene-header-toggle strong {
-	display: block;
-	margin-top: 3px;
-	font-size: 0.95rem;
-	font-weight: 720;
-	line-height: 1.05;
-	letter-spacing: -0.02em;
-}
-
-.scene-header-toggle svg {
-	color: var(--muted);
-	transition: transform 160ms ease;
-}
-
-.scene-header.open .scene-header-toggle svg {
-	transform: rotate(180deg);
-}
-
-.scene-header-summary {
-	display: inline-grid;
-	justify-items: end;
-	gap: 3px;
-	min-width: 0;
-}
-
-.scene-header-summary code {
-	max-width: 240px;
-	overflow: hidden;
-	color: #bae6fd;
-	font-size: 0.78rem;
-	font-weight: 800;
-	text-overflow: ellipsis;
-	white-space: nowrap;
-}
-
-.scene-header-summary span {
-	color: var(--muted);
-	font-family:
-		ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
-		"Liberation Mono", monospace;
-	font-size: 0.7rem;
-	font-weight: 760;
-}
-
-.scene-header-content {
-	display: grid;
 	grid-template-columns: minmax(150px, 0.72fr) minmax(240px, 1fr) auto;
 	gap: 10px;
 	align-items: stretch;
@@ -673,6 +622,13 @@ code {
 	color: #bae6fd;
 	font-size: 0.88rem;
 	font-weight: 800;
+}
+
+.spinor-equation-card p {
+	margin: 0;
+	color: var(--muted);
+	font-size: 0.72rem;
+	line-height: 1.25;
 }
 
 .angle-badge {
@@ -888,33 +844,28 @@ code {
 		overflow: visible;
 	}
 
-	.home-header,
-	.particle-layout {
-		grid-template-columns: 1fr;
-	}
-
 	.home-header {
 		align-items: flex-start;
 		flex-direction: column;
 	}
 
-	.chart-title-row,
-	.chart-row {
-		grid-template-columns: 110px repeat(4, minmax(110px, 1fr));
+	.header-thesis {
+		max-width: none;
+		width: 100%;
 	}
 
-	.standard-model-chart {
-		overflow-x: auto;
-		padding-bottom: 8px;
-	}
-
-	.chart-title-row,
-	.chart-row {
-		min-width: 680px;
+	.particle-page {
+		width: min(100vw - 20px, 1440px);
 	}
 
 	.particle-layout {
 		grid-template-columns: 1fr;
+		gap: 12px;
+	}
+
+	.fact-panel,
+	.education-panel {
+		overflow: visible;
 	}
 
 	.spin-scene {
@@ -927,11 +878,6 @@ code {
 
 	.canvas-wrap {
 		min-height: 360px;
-	}
-
-	.fact-panel,
-	.education-panel {
-		overflow: visible;
 	}
 }
 
@@ -946,17 +892,11 @@ code {
 
 	.home-header {
 		align-items: stretch;
-		flex-direction: column;
 		gap: 12px;
 	}
 
 	.brand-lockup {
 		align-items: flex-start;
-	}
-
-	.header-thesis {
-		max-width: none;
-		width: 100%;
 	}
 
 	.standard-model-chart {
@@ -1006,6 +946,157 @@ code {
 		justify-content: flex-start;
 		padding-bottom: 8px;
 	}
+
+	.fact-panel {
+		padding: 0;
+		overflow: hidden;
+	}
+
+	.fact-panel-toggle {
+		display: grid;
+		grid-template-columns: auto minmax(0, 1fr) auto;
+		gap: 10px;
+		align-items: center;
+		width: 100%;
+		border: 0;
+		background: #090b12;
+		color: var(--text);
+		padding: 11px 12px;
+		text-align: left;
+	}
+
+	.fact-panel-toggle:hover {
+		background: #111522;
+	}
+
+	.fact-panel-toggle svg {
+		color: var(--muted);
+		transition: transform 160ms ease;
+	}
+
+	.fact-panel.open .fact-panel-toggle svg {
+		transform: rotate(180deg);
+	}
+
+	.fact-toggle-symbol {
+		display: grid;
+		width: 38px;
+		height: 38px;
+		place-items: center;
+		border: 1px solid var(--border);
+		border-radius: 6px;
+		background: #05060a;
+		font-size: 1.28rem;
+		font-weight: 780;
+		line-height: 1;
+	}
+
+	.fact-toggle-copy {
+		display: grid;
+		gap: 3px;
+		min-width: 0;
+	}
+
+	.fact-toggle-copy strong {
+		overflow: hidden;
+		font-size: 0.95rem;
+		font-weight: 760;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.fact-toggle-copy em {
+		overflow: hidden;
+		color: var(--muted);
+		font-size: 0.68rem;
+		font-style: normal;
+		font-weight: 760;
+		letter-spacing: 0.08em;
+		text-overflow: ellipsis;
+		text-transform: uppercase;
+		white-space: nowrap;
+	}
+
+	.fact-panel-content {
+		display: none;
+		padding: 14px;
+	}
+
+	.fact-panel.open .fact-panel-content {
+		display: block;
+	}
+
+	.fact-panel .particle-emblem {
+		display: none;
+	}
+}
+
+@media (max-width: 720px) {
+	.home-page,
+	.particle-page {
+		width: min(100vw - 20px, 1440px);
+		padding-top: 14px;
+	}
+
+	.home-header h1,
+	.particle-hero h1 {
+		font-size: clamp(1.8rem, 10vw, 3rem);
+	}
+
+	.particle-hero h1 {
+		align-items: flex-start;
+		flex-direction: column;
+	}
+
+	.top-nav {
+		align-items: flex-start;
+		flex-direction: column;
+	}
+
+	.particle-nav {
+		width: 100%;
+		justify-content: space-between;
+	}
+
+	.scene-controls {
+		grid-template-columns: 1fr 1fr;
+	}
+
+	.scene-controls input {
+		grid-column: 1 / -1;
+	}
+
+	.sandwich-readout,
+	.spin-state-readout {
+		grid-template-columns: 1fr;
+	}
+
+	.rotor-chip,
+	.vector-chip {
+		min-height: 50px;
+		padding: 9px 14px;
+	}
+
+	.vector-chip {
+		padding-inline: 16px;
+	}
+
+	.spin-scene {
+		min-height: 640px;
+	}
+
+	.canvas-wrap {
+		min-height: 340px;
+	}
+
+	.sm-particle-card {
+		min-height: 82px;
+		padding: 10px;
+	}
+
+	.sm-name {
+		font-size: 0.78rem;
+	}
 }
 
 @media (max-width: 480px) {
@@ -1013,19 +1104,104 @@ code {
 		grid-template-columns: 1fr;
 	}
 
-	.sm-particle-card {
-		min-height: 82px;
-	}
-
-	.scene-header-toggle {
-		grid-template-columns: minmax(0, 1fr) auto;
-	}
-
-	.scene-header-summary {
-		display: none;
-	}
-
-	.scene-header-content {
+	.scene-header {
 		grid-template-columns: 1fr;
+	}
+
+	.scene-header code {
+		font-size: 0.78rem;
+	}
+}
+
+.fact-panel-toggle {
+	display: none;
+}
+
+.fact-panel-content {
+	display: contents;
+}
+
+@media (max-width: 820px) {
+	.fact-panel {
+		padding: 0;
+		overflow: hidden;
+	}
+
+	.fact-panel-toggle {
+		display: grid;
+		grid-template-columns: auto minmax(0, 1fr) auto;
+		gap: 10px;
+		align-items: center;
+		width: 100%;
+		border: 0;
+		background: #090b12;
+		color: var(--text);
+		padding: 11px 12px;
+		text-align: left;
+	}
+
+	.fact-panel-toggle:hover {
+		background: #111522;
+	}
+
+	.fact-panel-toggle svg {
+		color: var(--muted);
+		transition: transform 160ms ease;
+	}
+
+	.fact-panel.open .fact-panel-toggle svg {
+		transform: rotate(180deg);
+	}
+
+	.fact-toggle-symbol {
+		display: grid;
+		width: 38px;
+		height: 38px;
+		place-items: center;
+		border: 1px solid var(--border);
+		border-radius: 6px;
+		background: #05060a;
+		font-size: 1.28rem;
+		font-weight: 780;
+		line-height: 1;
+	}
+
+	.fact-toggle-copy {
+		display: grid;
+		gap: 3px;
+		min-width: 0;
+	}
+
+	.fact-toggle-copy strong {
+		overflow: hidden;
+		font-size: 0.95rem;
+		font-weight: 760;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.fact-toggle-copy em {
+		overflow: hidden;
+		color: var(--muted);
+		font-size: 0.68rem;
+		font-style: normal;
+		font-weight: 760;
+		letter-spacing: 0.08em;
+		text-overflow: ellipsis;
+		text-transform: uppercase;
+		white-space: nowrap;
+	}
+
+	.fact-panel-content {
+		display: none;
+		padding: 14px;
+	}
+
+	.fact-panel.open .fact-panel-content {
+		display: block;
+	}
+
+	.fact-panel .particle-emblem {
+		display: none;
 	}
 }
