@@ -1,10 +1,4 @@
-import {
-	useEffect,
-	useMemo,
-	useRef,
-	useState,
-	type CSSProperties,
-} from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Pause, Play, RotateCcw } from "lucide-react";
 import type { Particle } from "../data/particles.ts";
 import {
@@ -242,12 +236,11 @@ function drawProjectedCurve(
 	ctx.restore();
 }
 
-function drawDualAxisGuide(
+function drawRotorGuide(
 	ctx: CanvasRenderingContext2D,
-	width: number,
-	height: number,
-	centerX: number,
+	leftCenter: ProjectedPoint,
 	origin: ProjectedPoint,
+	rightCenter: ProjectedPoint,
 ) {
 	ctx.save();
 
@@ -256,9 +249,9 @@ function drawDualAxisGuide(
 	ctx.setLineDash([4, 8]);
 
 	ctx.beginPath();
-	ctx.moveTo(centerX, ROTOR_ACTION_MARGIN);
+	ctx.moveTo(leftCenter.x, leftCenter.y);
 	ctx.lineTo(origin.x, origin.y);
-	ctx.lineTo(centerX, height - ROTOR_ACTION_MARGIN);
+	ctx.lineTo(rightCenter.x, rightCenter.y);
 	ctx.stroke();
 
 	ctx.restore();
@@ -529,6 +522,66 @@ function drawRotorActionOrbit(
 	ctx.restore();
 }
 
+function getRotorSideCenters(
+	width: number,
+	height: number,
+	origin: ProjectedPoint,
+): {
+	left: ProjectedPoint;
+	right: ProjectedPoint;
+} {
+	const e1Tip = project(
+		getScenePoint({ x: 1.04, y: 0, z: 0 }),
+		width,
+		height,
+	);
+	const dx = e1Tip.x - origin.x;
+	const dy = e1Tip.y - origin.y;
+	const length = Math.hypot(dx, dy);
+
+	if (length < 0.000001 || Math.abs(dx) < 0.000001) {
+		return {
+			left: {
+				x: ROTOR_ACTION_MARGIN + ROTOR_ACTION_RADIUS,
+				y: origin.y,
+			},
+			right: {
+				x: width - ROTOR_ACTION_MARGIN - ROTOR_ACTION_RADIUS,
+				y: origin.y,
+			},
+		};
+	}
+
+	const direction = {
+		x: dx / length,
+		y: dy / length,
+	};
+
+	const leftX = ROTOR_ACTION_MARGIN + ROTOR_ACTION_RADIUS;
+	const rightX = width - ROTOR_ACTION_MARGIN - ROTOR_ACTION_RADIUS;
+	const leftT = (leftX - origin.x) / direction.x;
+	const rightT = (rightX - origin.x) / direction.x;
+
+	return {
+		left: {
+			x: leftX,
+			y: clamp(
+				origin.y + direction.y * leftT,
+				ROTOR_ACTION_MARGIN + ROTOR_ACTION_RADIUS,
+				height - ROTOR_ACTION_MARGIN - ROTOR_ACTION_RADIUS,
+			),
+		},
+		right: {
+			x: rightX,
+			y: clamp(
+				origin.y + direction.y * rightT,
+				ROTOR_ACTION_MARGIN + ROTOR_ACTION_RADIUS,
+				height - ROTOR_ACTION_MARGIN - ROTOR_ACTION_RADIUS,
+			),
+		},
+	};
+}
+
 function drawRotorActionOrbits(
 	ctx: CanvasRenderingContext2D,
 	width: number,
@@ -539,33 +592,15 @@ function drawRotorActionOrbits(
 ) {
 	if (spin === 0) return;
 
-	const axisTip = project(
-		getScenePoint(scaleVector(axis, 0.86)),
-		width,
-		height,
-	);
-	const centerX = clamp(
-		axisTip.x,
-		ROTOR_ACTION_MARGIN + ROTOR_ACTION_RADIUS,
-		width - ROTOR_ACTION_MARGIN - ROTOR_ACTION_RADIUS,
-	);
-	const topCenter = {
-		x: centerX,
-		y: ROTOR_ACTION_MARGIN + ROTOR_ACTION_RADIUS,
-	};
-	const bottomCenter = {
-		x: centerX,
-		y: height - ROTOR_ACTION_MARGIN - ROTOR_ACTION_RADIUS,
-	};
-
+	const { left, right } = getRotorSideCenters(width, height, origin);
 	const halfAngle = angle / 2;
 	const halfDegrees = Math.round((angle * 180) / Math.PI / 2);
 
-	drawDualAxisGuide(ctx, width, height, centerX, origin);
+	drawRotorGuide(ctx, left, origin, right);
 
 	drawRotorActionOrbit(
 		ctx,
-		topCenter,
+		left,
 		-halfAngle,
 		"R",
 		`−${halfDegrees}°`,
@@ -574,7 +609,7 @@ function drawRotorActionOrbits(
 
 	drawRotorActionOrbit(
 		ctx,
-		bottomCenter,
+		right,
 		halfAngle,
 		"R̃",
 		`+${halfDegrees}°`,
@@ -586,16 +621,30 @@ function getAngleLimit(spin: Particle["spin"]) {
 	return spin === 0.5 ? Math.PI * 4 : Math.PI * 2;
 }
 
-function getSpinorPlaneAngle(spin: Particle["spin"], angle: number) {
-	if (spin === 0.5) {
-		return Math.round((angle * 180) / Math.PI / 2);
+function formatCoefficient(value: number) {
+	if (Math.abs(value) < 0.005) return "0.00";
+
+	const rounded = value.toFixed(2);
+
+	return rounded === "-0.00" ? "0.00" : rounded;
+}
+
+function formatSpinorEquation(spin: Particle["spin"], angle: number) {
+	if (spin === 0) {
+		return "ψ = s";
 	}
 
 	if (spin === 1) {
-		return Math.round((angle * 180) / Math.PI);
+		return "state angle = θ";
 	}
 
-	return 0;
+	const scalar = Math.cos(angle / 2);
+	const bivector = -Math.sin(angle / 2);
+	const sign = bivector < 0 ? "−" : "+";
+
+	return `ψ = ${formatCoefficient(scalar)} ${sign} ${formatCoefficient(
+		Math.abs(bivector),
+	)}B`;
 }
 
 function getSpinorCopy(spin: Particle["spin"], angle: number) {
@@ -603,69 +652,51 @@ function getSpinorCopy(spin: Particle["spin"], angle: number) {
 
 	if (spin === 0) {
 		return {
-			title: "scalar state",
-			status: "invariant",
-			description:
-				"Spin-0 has no spinor sign flip or vector-like orientation state.",
+			status: "s",
+			substatus: "invariant",
+			description: "Spin-0 has no spinor sign flip.",
 			returnCopy: "scalar: unchanged by rotation",
-			formula: "s′ = s",
 		};
 	}
 
 	if (spin === 1) {
 		return {
-			title: "integer-spin state",
-			status: degrees >= 350 ? "returned" : "one-turn state",
+			status: "state",
+			substatus: degrees >= 350 ? "returned" : "one turn",
 			description:
 				"This simplified spin-1 view returns after one 360° rotation.",
 			returnCopy:
 				degrees >= 350
 					? "integer spin: returned after 360°"
 					: "integer spin: 360° return",
-			formula: "state angle = θ",
 		};
 	}
 
 	if (degrees >= 710) {
 		return {
-			title: "ψ = R",
-			status: "+ψ return",
+			status: "ψ ↑",
+			substatus: "full return",
 			description:
-				"ψ is the rotor-state object in the even subalgebra. It has returned to +1.",
+				"The spinor has returned to +ψ after two vector turns.",
 			returnCopy: "spinor: full return at 720°",
-			formula: "ψ = cos(θ/2) − B sin(θ/2)",
 		};
 	}
 
-	if (degrees >= 350 && degrees <= 370) {
+	if (degrees >= 360) {
 		return {
-			title: "ψ = R",
-			status: "−ψ sign flip",
+			status: "ψ ↓",
+			substatus: "second sheet",
 			description:
-				"The vector observable has returned, but ψ points to −1 in the spinor plane.",
-			returnCopy: "spinor: sign flip at 360°",
-			formula: "ψ = cos(θ/2) − B sin(θ/2)",
-		};
-	}
-
-	if (degrees < 360) {
-		return {
-			title: "ψ = R",
-			status: "+ψ → −ψ",
-			description:
-				"The animated ψ arrow is the rotor itself: scalar plus bivector part.",
-			returnCopy: "spinor: first sheet",
-			formula: "ψ = cos(θ/2) − B sin(θ/2)",
+				"The vector repeats its orientation, but the spinor is on the −ψ sheet.",
+			returnCopy: "spinor: second sheet",
 		};
 	}
 
 	return {
-		title: "ψ = R",
-		status: "−ψ → +ψ",
-		description:
-			"The vector traces the same circle again while ψ returns from −1 to +1.",
-		returnCopy: "spinor: second sheet",
-		formula: "ψ = cos(θ/2) − B sin(θ/2)",
+		status: "ψ ↑",
+		substatus: "first sheet",
+		description: "The spinor is moving from +ψ toward −ψ.",
+		returnCopy: "spinor: first sheet",
 	};
 }
 
@@ -852,21 +883,18 @@ export function SpinScene({ particle }: SpinSceneProps) {
 	const degrees = Math.round((angle * 180) / Math.PI);
 	const halfDegrees = Math.round(degrees / 2);
 	const spinorCopy = getSpinorCopy(particle.spin, angle);
-	const spinorPlaneAngle = getSpinorPlaneAngle(particle.spin, angle);
+	const spinorEquation = formatSpinorEquation(particle.spin, angle);
 	const rotorLabel =
 		particle.spin === 0
 			? "scalar invariant"
 			: particle.spin === 1
 				? "integer-spin representation returns after 360°"
 				: formatMultivector(rotor);
-	const spinorPlaneStyle = {
-		"--spinor-angle": `${spinorPlaneAngle}deg`,
-	} as CSSProperties;
 
 	return (
 		<section className="glass-panel spin-scene">
 			<div className="scene-header">
-				<div>
+				<div className="scene-title">
 					<p className="eyebrow">Rotor sandwich</p>
 					<h2>
 						{particle.spin === 0.5
@@ -877,9 +905,16 @@ export function SpinScene({ particle }: SpinSceneProps) {
 					</h2>
 				</div>
 
+				<div className="spinor-equation-card">
+					<span>Spinor state</span>
+					<code>{spinorEquation}</code>
+					<p>{spinorCopy.description}</p>
+				</div>
+
 				<div className="angle-badge">
 					<span>{degrees}° rotation</span>
 					<strong>{spinorCopy.status}</strong>
+					<em>{spinorCopy.substatus}</em>
 				</div>
 			</div>
 
@@ -914,53 +949,6 @@ export function SpinScene({ particle }: SpinSceneProps) {
 					type="range"
 					value={clamp(angle, 0, angleLimit)}
 				/>
-			</div>
-
-			<div className="spinor-readout">
-				<div className="spinor-readout-copy">
-					<span>Spinor state</span>
-					<strong>{spinorCopy.title}</strong>
-					<p>{spinorCopy.description}</p>
-				</div>
-
-				<div
-					className={`spinor-plane ${
-						particle.spin === 0.5 ? "spinor-plane-half" : ""
-					}`}
-					style={spinorPlaneStyle}
-				>
-					<div className="spinor-plane-heading">
-						<span>
-							{particle.spin === 0.5
-								? "even subalgebra slice"
-								: "state slice"}
-						</span>
-						<strong>{spinorCopy.formula}</strong>
-					</div>
-
-					<div className="spinor-plane-plot">
-						<div className="spinor-axis horizontal" />
-						<div className="spinor-axis vertical" />
-						<div className="spinor-unit-circle" />
-
-						<span className="spinor-plane-label right">
-							{particle.spin === 0.5 ? "+1" : "+state"}
-						</span>
-						<span className="spinor-plane-label left">
-							{particle.spin === 0.5 ? "−1" : "return"}
-						</span>
-						<span className="spinor-plane-label top">
-							{particle.spin === 0.5 ? "+B" : "+"}
-						</span>
-						<span className="spinor-plane-label bottom">
-							{particle.spin === 0.5 ? "−B" : "−"}
-						</span>
-
-						<div className="spinor-vector">
-							<span>{particle.spin === 0.5 ? "ψ" : "state"}</span>
-						</div>
-					</div>
-				</div>
 			</div>
 
 			<div className="sandwich-readout">
