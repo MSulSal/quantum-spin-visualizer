@@ -152,14 +152,16 @@ function drawRotorDial(
 	);
 	ctx.fill();
 
+	ctx.textAlign = "center";
+	ctx.textBaseline = "middle";
+
 	ctx.fillStyle = "#f8fafc";
 	ctx.font = "700 13px ui-monospace, SFMono-Regular, Menlo, monospace";
-	ctx.textAlign = "center";
-	ctx.fillText(label, x, y + radius + 22);
+	ctx.fillText(label, x, y - 3);
 
 	ctx.fillStyle = "#94a3b8";
-	ctx.font = "11px ui-monospace, SFMono-Regular, Menlo, monospace";
-	ctx.fillText(subLabel, x, y + radius + 38);
+	ctx.font = "10px ui-monospace, SFMono-Regular, Menlo, monospace";
+	ctx.fillText(subLabel, x, y + 13);
 
 	ctx.restore();
 }
@@ -171,26 +173,28 @@ function drawSandwichDiagram(
 	angle: number,
 	spin: Particle["spin"],
 ) {
-	const boxWidth = Math.min(460, width - 32);
+	const boxWidth = Math.min(500, width - 32);
 	const boxHeight = 112;
 	const x = width / 2 - boxWidth / 2;
 	const y = height - boxHeight - 18;
 
 	ctx.save();
 
-	ctx.fillStyle = "rgba(2, 6, 23, 0.78)";
+	ctx.fillStyle = "rgba(2, 6, 23, 0.84)";
 	ctx.strokeStyle = "rgba(148, 163, 184, 0.22)";
 	ctx.lineWidth = 1;
 	ctx.beginPath();
-	ctx.roundRect(x, y, boxWidth, boxHeight, 18);
+	ctx.roundRect(x, y, boxWidth, boxHeight, 8);
 	ctx.fill();
 	ctx.stroke();
 
 	if (spin === 0) {
+		ctx.textAlign = "center";
+		ctx.textBaseline = "middle";
+
 		ctx.fillStyle = "#f8fafc";
 		ctx.font = "700 15px ui-monospace, SFMono-Regular, Menlo, monospace";
-		ctx.textAlign = "center";
-		ctx.fillText("s′ = s", width / 2, y + 46);
+		ctx.fillText("s′ = s", width / 2, y + 42);
 
 		ctx.fillStyle = "#94a3b8";
 		ctx.font = "12px ui-sans-serif, system-ui";
@@ -199,31 +203,33 @@ function drawSandwichDiagram(
 			width / 2,
 			y + 70,
 		);
+
 		ctx.restore();
 		return;
 	}
 
 	const halfAngle = angle / 2;
-	const leftX = x + 72;
-	const rightX = x + boxWidth - 72;
+	const leftX = x + 76;
+	const rightX = x + boxWidth - 76;
 	const centerX = x + boxWidth / 2;
-	const centerY = y + 42;
+	const dialY = y + 42;
 
-	drawRotorDial(ctx, leftX, centerY, 22, -halfAngle, "R", "−θ/2", "#a78bfa");
+	drawRotorDial(ctx, leftX, dialY, 25, -halfAngle, "R", "−θ/2", "#a78bfa");
+	drawRotorDial(ctx, rightX, dialY, 25, halfAngle, "R̃", "+θ/2", "#22d3ee");
 
-	drawRotorDial(ctx, rightX, centerY, 22, halfAngle, "R̃", "+θ/2", "#22d3ee");
+	ctx.textAlign = "center";
+	ctx.textBaseline = "middle";
 
 	ctx.fillStyle = "#f8fafc";
-	ctx.font = "800 19px ui-monospace, SFMono-Regular, Menlo, monospace";
-	ctx.textAlign = "center";
-	ctx.fillText("v′ = R v R̃", centerX, centerY + 6);
+	ctx.font = "800 18px ui-monospace, SFMono-Regular, Menlo, monospace";
+	ctx.fillText("v′ = R v R̃", centerX, y + 42);
 
 	ctx.fillStyle = "#94a3b8";
 	ctx.font = "12px ui-sans-serif, system-ui";
 	ctx.fillText(
 		"the vector is sandwiched between two half-angle rotor actions",
 		centerX,
-		y + 88,
+		y + 82,
 	);
 
 	ctx.restore();
@@ -390,7 +396,11 @@ export function SpinScene({ particle }: SpinSceneProps) {
 		);
 
 		const axisTip = project(
-			{ x: axis.x, y: axis.y - 0.12, z: axis.z },
+			{
+				x: axis.x,
+				y: axis.y - 0.12,
+				z: axis.z,
+			},
 			width,
 			height,
 		);
