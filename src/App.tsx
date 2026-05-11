@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Atom } from "lucide-react";
+import { Rotate3D } from "lucide-react";
 import { getParticleById, particles } from "./data/particles.ts";
 import { ParticlePage } from "./components/ParticlePage.tsx";
 import { StandardModelChart } from "./components/StandardModelChart.tsx";
@@ -41,12 +41,12 @@ export default function App() {
 		<main className="home-page">
 			<header className="home-header">
 				<div className="brand-lockup">
-					<div className="logo-mark">
-						<Atom size={22} />
+					<div className="logo-mark" aria-hidden="true">
+						<Rotate3D size={22} strokeWidth={1.8} />
 					</div>
 
 					<div>
-						<h1>Quantum Spin Visualizer</h1>
+						<h1>rotorspin</h1>
 						<p>
 							Standard Model spin explained through geometric
 							algebra rotors: vectors, bivectors, spinors, and the
@@ -58,8 +58,8 @@ export default function App() {
 				<div className="header-thesis">
 					<span>Core idea</span>
 					<strong>
-						Spin is transformation under rotation, not a tiny ball
-						spinning.
+						Spin is transformation under rotation through bivectors,
+						rotors, spinors, and half-angle state behavior.
 					</strong>
 				</div>
 			</header>
