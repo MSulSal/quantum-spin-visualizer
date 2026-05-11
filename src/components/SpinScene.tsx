@@ -586,13 +586,13 @@ function getAngleLimit(spin: Particle["spin"]) {
 	return spin === 0.5 ? Math.PI * 4 : Math.PI * 2;
 }
 
-function getSpinorTrackProgress(spin: Particle["spin"], angle: number) {
+function getSpinorPlaneAngle(spin: Particle["spin"], angle: number) {
 	if (spin === 0.5) {
-		return clamp((angle / (Math.PI * 4)) * 100, 0, 100);
+		return Math.round((angle * 180) / Math.PI / 2);
 	}
 
 	if (spin === 1) {
-		return clamp((angle / (Math.PI * 2)) * 100, 0, 100);
+		return Math.round((angle * 180) / Math.PI);
 	}
 
 	return 0;
@@ -608,6 +608,7 @@ function getSpinorCopy(spin: Particle["spin"], angle: number) {
 			description:
 				"Spin-0 has no spinor sign flip or vector-like orientation state.",
 			returnCopy: "scalar: unchanged by rotation",
+			formula: "s′ = s",
 		};
 	}
 
@@ -616,11 +617,12 @@ function getSpinorCopy(spin: Particle["spin"], angle: number) {
 			title: "integer-spin state",
 			status: degrees >= 350 ? "returned" : "one-turn state",
 			description:
-				"The state representation returns after one 360° rotation.",
+				"This simplified spin-1 view returns after one 360° rotation.",
 			returnCopy:
 				degrees >= 350
 					? "integer spin: returned after 360°"
 					: "integer spin: 360° return",
+			formula: "state angle = θ",
 		};
 	}
 
@@ -629,8 +631,9 @@ function getSpinorCopy(spin: Particle["spin"], angle: number) {
 			title: "ψ = R",
 			status: "+ψ return",
 			description:
-				"The spinor has completed the second sheet and returned to its initial state.",
+				"ψ is the rotor-state object in the even subalgebra. It has returned to +1.",
 			returnCopy: "spinor: full return at 720°",
+			formula: "ψ = cos(θ/2) − B sin(θ/2)",
 		};
 	}
 
@@ -639,8 +642,9 @@ function getSpinorCopy(spin: Particle["spin"], angle: number) {
 			title: "ψ = R",
 			status: "−ψ sign flip",
 			description:
-				"The vector observable has returned, but the spinor/rotor state has flipped sign.",
+				"The vector observable has returned, but ψ points to −1 in the spinor plane.",
 			returnCopy: "spinor: sign flip at 360°",
+			formula: "ψ = cos(θ/2) − B sin(θ/2)",
 		};
 	}
 
@@ -649,8 +653,9 @@ function getSpinorCopy(spin: Particle["spin"], angle: number) {
 			title: "ψ = R",
 			status: "+ψ → −ψ",
 			description:
-				"The spinor is the rotor-state object. It moves through the first half of its two-turn return.",
+				"The animated ψ arrow is the rotor itself: scalar plus bivector part.",
 			returnCopy: "spinor: first sheet",
+			formula: "ψ = cos(θ/2) − B sin(θ/2)",
 		};
 	}
 
@@ -658,8 +663,9 @@ function getSpinorCopy(spin: Particle["spin"], angle: number) {
 		title: "ψ = R",
 		status: "−ψ → +ψ",
 		description:
-			"The vector is tracing the same circle again, while the spinor returns from −ψ to +ψ.",
+			"The vector traces the same circle again while ψ returns from −1 to +1.",
 		returnCopy: "spinor: second sheet",
+		formula: "ψ = cos(θ/2) − B sin(θ/2)",
 	};
 }
 
@@ -846,15 +852,15 @@ export function SpinScene({ particle }: SpinSceneProps) {
 	const degrees = Math.round((angle * 180) / Math.PI);
 	const halfDegrees = Math.round(degrees / 2);
 	const spinorCopy = getSpinorCopy(particle.spin, angle);
-	const spinorProgress = getSpinorTrackProgress(particle.spin, angle);
+	const spinorPlaneAngle = getSpinorPlaneAngle(particle.spin, angle);
 	const rotorLabel =
 		particle.spin === 0
 			? "scalar invariant"
 			: particle.spin === 1
 				? "integer-spin representation returns after 360°"
 				: formatMultivector(rotor);
-	const spinorTrackStyle = {
-		"--spinor-progress": `${spinorProgress}%`,
+	const spinorPlaneStyle = {
+		"--spinor-angle": `${spinorPlaneAngle}deg`,
 	} as CSSProperties;
 
 	return (
@@ -917,27 +923,44 @@ export function SpinScene({ particle }: SpinSceneProps) {
 					<p>{spinorCopy.description}</p>
 				</div>
 
-				{particle.spin !== 0 && (
-					<div
-						className={`spinor-track ${
-							particle.spin === 0.5 ? "two-turn" : "one-turn"
-						}`}
-						style={spinorTrackStyle}
-					>
-						<div className="spinor-track-line" />
-						<div className="spinor-track-fill" />
-						<div className="spinor-track-dot" />
-						<span className="spinor-track-label start">0°</span>
-						{particle.spin === 0.5 && (
-							<span className="spinor-track-label middle">
-								360°: −ψ
-							</span>
-						)}
-						<span className="spinor-track-label end">
-							{particle.spin === 0.5 ? "720°: +ψ" : "360°"}
+				<div
+					className={`spinor-plane ${
+						particle.spin === 0.5 ? "spinor-plane-half" : ""
+					}`}
+					style={spinorPlaneStyle}
+				>
+					<div className="spinor-plane-heading">
+						<span>
+							{particle.spin === 0.5
+								? "even subalgebra slice"
+								: "state slice"}
 						</span>
+						<strong>{spinorCopy.formula}</strong>
 					</div>
-				)}
+
+					<div className="spinor-plane-plot">
+						<div className="spinor-axis horizontal" />
+						<div className="spinor-axis vertical" />
+						<div className="spinor-unit-circle" />
+
+						<span className="spinor-plane-label right">
+							{particle.spin === 0.5 ? "+1" : "+state"}
+						</span>
+						<span className="spinor-plane-label left">
+							{particle.spin === 0.5 ? "−1" : "return"}
+						</span>
+						<span className="spinor-plane-label top">
+							{particle.spin === 0.5 ? "+B" : "+"}
+						</span>
+						<span className="spinor-plane-label bottom">
+							{particle.spin === 0.5 ? "−B" : "−"}
+						</span>
+
+						<div className="spinor-vector">
+							<span>{particle.spin === 0.5 ? "ψ" : "state"}</span>
+						</div>
+					</div>
+				</div>
 			</div>
 
 			<div className="sandwich-readout">
