@@ -676,8 +676,6 @@ function getSpinorCopy(spin: Particle["spin"], angle: number) {
 		return {
 			status: "ψ ↑",
 			substatus: "full return",
-			description:
-				"The spinor has returned to +ψ after two vector turns.",
 			returnCopy: "spinor: full return at 720°",
 		};
 	}
@@ -686,8 +684,6 @@ function getSpinorCopy(spin: Particle["spin"], angle: number) {
 		return {
 			status: "ψ ↓",
 			substatus: "second sheet",
-			description:
-				"The vector repeats its orientation, but the spinor is on the −ψ sheet.",
 			returnCopy: "spinor: second sheet",
 		};
 	}
@@ -695,7 +691,6 @@ function getSpinorCopy(spin: Particle["spin"], angle: number) {
 	return {
 		status: "ψ ↑",
 		substatus: "first sheet",
-		description: "The spinor is moving from +ψ toward −ψ.",
 		returnCopy: "spinor: first sheet",
 	};
 }
