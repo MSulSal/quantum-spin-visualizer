@@ -566,7 +566,7 @@ code {
 .spin-scene {
 	display: grid;
 	min-height: 0;
-	grid-template-rows: auto 1fr auto auto auto;
+	grid-template-rows: auto 1fr auto auto auto auto;
 }
 
 .scene-header {
@@ -599,7 +599,7 @@ code {
 .canvas-wrap {
 	position: relative;
 	min-height: 0;
-	margin: 12px 0;
+	margin: 10px 0;
 	overflow: hidden;
 	border: 1px solid var(--border);
 	border-radius: 8px;
@@ -626,23 +626,21 @@ code {
 
 .sandwich-readout {
 	display: grid;
-	grid-template-columns: 76px minmax(0, 1fr) 76px;
-	gap: 10px;
-	align-items: center;
-	border: 1px solid var(--border);
-	border-radius: 8px;
-	background: #090b12;
-	padding: 10px;
+	grid-template-columns: 86px minmax(0, 1fr) 86px;
+	gap: 8px;
+	align-items: stretch;
+	margin-top: 8px;
 }
 
-.rotor-chip {
+.rotor-chip,
+.vector-chip {
 	display: grid;
-	min-height: 58px;
+	min-height: 52px;
 	place-items: center;
 	gap: 2px;
 	border: 1px solid rgba(148, 163, 184, 0.22);
 	border-radius: 8px;
-	background: #05060a;
+	background: #090b12;
 }
 
 .rotor-chip.left {
@@ -653,8 +651,14 @@ code {
 	color: var(--lepton);
 }
 
-.rotor-chip.scalar {
+.rotor-chip.scalar,
+.vector-chip {
 	color: var(--scalar);
+}
+
+.vector-chip {
+	border-color: rgba(52, 211, 153, 0.24);
+	color: var(--boson);
 }
 
 .rotor-symbol {
@@ -674,22 +678,34 @@ code {
 	font-size: 0.72rem;
 }
 
-.sandwich-center {
+.spin-state-readout {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 8px;
+	margin-top: 8px;
+}
+
+.spin-state-readout div {
 	display: grid;
 	gap: 4px;
-	text-align: center;
+	border: 1px solid var(--border);
+	border-radius: 8px;
+	background: #090b12;
+	padding: 9px;
 }
 
-.sandwich-center code {
-	color: var(--text);
-	font-size: 1rem;
-	font-weight: 800;
-}
-
-.sandwich-center span {
+.spin-state-readout span {
 	color: var(--muted);
+	font-size: 0.64rem;
+	font-weight: 800;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+}
+
+.spin-state-readout strong {
+	color: var(--text);
 	font-size: 0.78rem;
-	line-height: 1.35;
+	line-height: 1.3;
 }
 
 .formula-card,
@@ -709,7 +725,7 @@ code {
 .formula-strip {
 	display: grid;
 	gap: 6px;
-	margin-top: 10px;
+	margin-top: 8px;
 	font-size: 0.86rem;
 }
 
@@ -777,7 +793,7 @@ code {
 	}
 
 	.spin-scene {
-		min-height: 560px;
+		min-height: 620px;
 	}
 
 	.canvas-wrap {
@@ -830,7 +846,8 @@ code {
 		grid-column: 1 / -1;
 	}
 
-	.sandwich-readout {
+	.sandwich-readout,
+	.spin-state-readout {
 		grid-template-columns: 1fr;
 	}
 
