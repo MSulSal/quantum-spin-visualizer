@@ -19,6 +19,11 @@ type ProjectedPoint = {
 	y: number;
 };
 
+type ArrowOptions = {
+	alpha?: number;
+	dash?: number[];
+};
+
 const sceneOffset: Vector3 = { x: 0, y: -0.08, z: 0 };
 const axis: Vector3 = normalizeSceneVector({ x: 0.35, y: 0.72, z: 0.59 });
 const referenceVector: Vector3 = normalizeSceneVector({
@@ -101,6 +106,12 @@ function project(
 	return { x, y };
 }
 
+function getPositiveModuloAngle(angle: number) {
+	const tau = Math.PI * 2;
+
+	return ((angle % tau) + tau) % tau;
+}
+
 function drawArrow(
 	ctx: CanvasRenderingContext2D,
 	from: ProjectedPoint,
@@ -108,25 +119,31 @@ function drawArrow(
 	color: string,
 	width: number,
 	label?: string,
+	options: ArrowOptions = {},
 ) {
 	const dx = to.x - from.x;
 	const dy = to.y - from.y;
 	const angle = Math.atan2(dy, dx);
 	const length = Math.hypot(dx, dy);
+	const alpha = options.alpha ?? 1;
 
 	if (length < 2) return;
 
 	ctx.save();
+	ctx.globalAlpha = alpha;
 	ctx.strokeStyle = color;
 	ctx.fillStyle = color;
 	ctx.lineWidth = width;
 	ctx.lineCap = "round";
 	ctx.lineJoin = "round";
+	ctx.setLineDash(options.dash ?? []);
 
 	ctx.beginPath();
 	ctx.moveTo(from.x, from.y);
 	ctx.lineTo(to.x, to.y);
 	ctx.stroke();
+
+	ctx.setLineDash([]);
 
 	const size = Math.max(8, width * 3.2);
 
@@ -143,9 +160,9 @@ function drawArrow(
 
 	if (label) {
 		ctx.save();
+		ctx.globalAlpha = alpha;
 		ctx.font = "12px ui-monospace, SFMono-Regular, Menlo, monospace";
 		ctx.fillStyle = color;
-		ctx.globalAlpha = 0.9;
 		ctx.fillText(label, to.x + 7, to.y - 7);
 		ctx.restore();
 	}
@@ -169,7 +186,7 @@ function drawBivectorPlane(
 
 	ctx.fillStyle = color;
 	ctx.strokeStyle = color;
-	ctx.globalAlpha = 0.12;
+	ctx.globalAlpha = 0.1;
 	ctx.beginPath();
 	ctx.moveTo(points[0].x, points[0].y);
 
@@ -180,7 +197,7 @@ function drawBivectorPlane(
 	ctx.closePath();
 	ctx.fill();
 
-	ctx.globalAlpha = 0.54;
+	ctx.globalAlpha = 0.5;
 	ctx.lineWidth = 1.4;
 	ctx.stroke();
 
@@ -214,14 +231,43 @@ function drawBivectorPlane(
 	ctx.restore();
 }
 
+function drawVectorOrbit(
+	ctx: CanvasRenderingContext2D,
+	width: number,
+	height: number,
+) {
+	const radius = 1.05;
+	const points: ProjectedPoint[] = [];
+
+	for (let index = 0; index <= 112; index += 1) {
+		const angle = (index / 112) * Math.PI * 2;
+		points.push(project(getPlanePoint(angle, radius), width, height));
+	}
+
+	ctx.save();
+	ctx.strokeStyle = "rgba(248, 250, 252, 0.22)";
+	ctx.lineWidth = 1.2;
+	ctx.setLineDash([3, 7]);
+	ctx.beginPath();
+	ctx.moveTo(points[0].x, points[0].y);
+
+	for (const point of points.slice(1)) {
+		ctx.lineTo(point.x, point.y);
+	}
+
+	ctx.closePath();
+	ctx.stroke();
+	ctx.restore();
+}
+
 function drawAngleArc(
 	ctx: CanvasRenderingContext2D,
 	width: number,
 	height: number,
 	angle: number,
 ) {
-	const normalizedAngle = angle % (Math.PI * 2);
-	const radius = 0.36;
+	const normalizedAngle = getPositiveModuloAngle(angle);
+	const radius = 0.38;
 	const steps = Math.max(8, Math.ceil(Math.abs(normalizedAngle) * 28));
 	const points: ProjectedPoint[] = [];
 
@@ -234,7 +280,7 @@ function drawAngleArc(
 
 	ctx.save();
 
-	ctx.strokeStyle = "rgba(52, 211, 153, 0.8)";
+	ctx.strokeStyle = "rgba(52, 211, 153, 0.82)";
 	ctx.lineWidth = 2;
 	ctx.lineCap = "round";
 	ctx.beginPath();
@@ -257,6 +303,126 @@ function drawAngleArc(
 	ctx.fillText("θ", labelPoint.x + 4, labelPoint.y - 4);
 
 	ctx.restore();
+}
+
+function drawProgressArrowhead(
+	ctx: CanvasRenderingContext2D,
+	x: number,
+	y: number,
+	angle: number,
+	color: string,
+) {
+	ctx.save();
+	ctx.translate(x, y);
+	ctx.rotate(angle);
+	ctx.fillStyle = color;
+
+	ctx.beginPath();
+	ctx.moveTo(0, 0);
+	ctx.lineTo(-7, 4);
+	ctx.lineTo(-5, 0);
+	ctx.lineTo(-7, -4);
+	ctx.closePath();
+	ctx.fill();
+
+	ctx.restore();
+}
+
+function drawProgressCircle(
+	ctx: CanvasRenderingContext2D,
+	center: ProjectedPoint,
+	radius: number,
+	angle: number,
+	label: string,
+	subLabel: string,
+	color: string,
+) {
+	const sweep = getPositiveModuloAngle(Math.abs(angle));
+	const direction = angle >= 0 ? 1 : -1;
+	const start = -Math.PI / 2;
+	const end = start + direction * sweep;
+	const anticlockwise = direction < 0;
+
+	ctx.save();
+
+	ctx.strokeStyle = "rgba(148, 163, 184, 0.28)";
+	ctx.lineWidth = 1.2;
+	ctx.beginPath();
+	ctx.arc(center.x, center.y, radius, 0, Math.PI * 2);
+	ctx.stroke();
+
+	ctx.strokeStyle = color;
+	ctx.lineWidth = 2.6;
+	ctx.lineCap = "round";
+
+	if (sweep > 0.0001) {
+		ctx.beginPath();
+		ctx.arc(center.x, center.y, radius, start, end, anticlockwise);
+		ctx.stroke();
+
+		const arrowX = center.x + Math.cos(end) * radius;
+		const arrowY = center.y + Math.sin(end) * radius;
+		const tangent = end + (direction > 0 ? Math.PI / 2 : -Math.PI / 2);
+
+		drawProgressArrowhead(ctx, arrowX, arrowY, tangent, color);
+	}
+
+	ctx.textAlign = "center";
+	ctx.textBaseline = "middle";
+
+	ctx.fillStyle = "#f8fafc";
+	ctx.font = "800 13px ui-monospace, SFMono-Regular, Menlo, monospace";
+	ctx.fillText(label, center.x, center.y - 3);
+
+	ctx.fillStyle = "#94a3b8";
+	ctx.font = "10px ui-monospace, SFMono-Regular, Menlo, monospace";
+	ctx.fillText(subLabel, center.x, center.y + 13);
+
+	ctx.restore();
+}
+
+function drawRotorProgressCircles(
+	ctx: CanvasRenderingContext2D,
+	width: number,
+	height: number,
+	angle: number,
+	spin: Particle["spin"],
+) {
+	if (spin === 0) return;
+
+	const upperCenter = project(
+		getScenePoint(scaleVector(axis, 0.82)),
+		width,
+		height,
+	);
+	const lowerCenter = project(
+		getScenePoint(scaleVector(axis, -0.82)),
+		width,
+		height,
+	);
+	const radius = Math.max(22, Math.min(width, height) * 0.055);
+	const halfAngle = angle / 2;
+	const halfDegrees = Math.round((angle * 180) / Math.PI / 2);
+
+	drawProgressCircle(
+		ctx,
+		upperCenter,
+		radius,
+		-halfAngle,
+		"R",
+		`−${halfDegrees}°`,
+		"#a78bfa",
+	);
+
+	drawProgressCircle(
+		ctx,
+		lowerCenter,
+		radius,
+		halfAngle,
+		"R̃",
+		`+${halfDegrees}°`,
+		"#22d3ee",
+	);
 }
 
 function getAngleLimit(spin: Particle["spin"]) {
@@ -390,6 +556,7 @@ export function SpinScene({ particle }: SpinSceneProps) {
 		currentContext.restore();
 
 		drawBivectorPlane(currentContext, width, height, "#a855f7");
+		drawVectorOrbit(currentContext, width, height);
 		drawAngleArc(currentContext, width, height, angle);
 
 		const basis = [
@@ -406,6 +573,7 @@ export function SpinScene({ particle }: SpinSceneProps) {
 				item.color,
 				1.7,
 				item.label,
+				{ alpha: 0.8 },
 			);
 		}
 
@@ -419,9 +587,24 @@ export function SpinScene({ particle }: SpinSceneProps) {
 			currentContext,
 			origin,
 			axisTip,
-			"rgba(244, 114, 182, 0.5)",
+			"rgba(244, 114, 182, 0.45)",
 			1.7,
 			"dual axis",
+			{ alpha: 0.72 },
+		);
+
+		drawArrow(
+			currentContext,
+			origin,
+			project(
+				getScenePoint(scaleVector(referenceVector, 1.05)),
+				width,
+				height,
+			),
+			"rgba(248, 250, 252, 0.55)",
+			2,
+			"v₀",
+			{ alpha: 0.56, dash: [5, 7] },
 		);
 
 		drawArrow(
@@ -439,6 +622,14 @@ export function SpinScene({ particle }: SpinSceneProps) {
 					: "#f8fafc",
 			4,
 			particle.spin === 0 ? "s" : "v(θ)",
+		);
+
+		drawRotorProgressCircles(
+			currentContext,
+			width,
+			height,
+			angle,
+			particle.spin,
 		);
 	}, [angle, particle.spin, rotatedVector]);
 
