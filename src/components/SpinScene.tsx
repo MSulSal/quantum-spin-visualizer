@@ -81,7 +81,7 @@ function getScenePoint(point: Vector3): Vector3 {
 	return addVectors(point, sceneOffset);
 }
 
-function getPlanePoint(angle: number, radius: number): Vector3 {
+function getPlaneVector(angle: number, radius: number): Vector3 {
 	const alongReference = scaleVector(
 		referenceVector,
 		Math.cos(angle) * radius,
@@ -91,7 +91,24 @@ function getPlanePoint(angle: number, radius: number): Vector3 {
 		Math.sin(angle) * radius,
 	);
 
-	return getScenePoint(addVectors(alongReference, alongCompanion));
+	return addVectors(alongReference, alongCompanion);
+}
+
+function getPlanePoint(angle: number, radius: number): Vector3 {
+	return getScenePoint(getPlaneVector(angle, radius));
+}
+
+function getOffsetPlanePoint(
+	offsetAlongDualAxis: number,
+	angle: number,
+	radius: number,
+): Vector3 {
+	return getScenePoint(
+		addVectors(
+			scaleVector(axis, offsetAlongDualAxis),
+			getPlaneVector(angle, radius),
+		),
+	);
 }
 
 function project(
@@ -110,6 +127,31 @@ function getPositiveModuloAngle(angle: number) {
 	const tau = Math.PI * 2;
 
 	return ((angle % tau) + tau) % tau;
+}
+
+function drawArrowhead(
+	ctx: CanvasRenderingContext2D,
+	point: ProjectedPoint,
+	angle: number,
+	color: string,
+	size: number,
+	alpha = 1,
+) {
+	ctx.save();
+	ctx.globalAlpha = alpha;
+	ctx.translate(point.x, point.y);
+	ctx.rotate(angle);
+	ctx.fillStyle = color;
+
+	ctx.beginPath();
+	ctx.moveTo(0, 0);
+	ctx.lineTo(-size, size * 0.48);
+	ctx.lineTo(-size * 0.72, 0);
+	ctx.lineTo(-size, -size * 0.48);
+	ctx.closePath();
+	ctx.fill();
+
+	ctx.restore();
 }
 
 function drawArrow(
@@ -143,20 +185,9 @@ function drawArrow(
 	ctx.lineTo(to.x, to.y);
 	ctx.stroke();
 
-	ctx.setLineDash([]);
-
-	const size = Math.max(8, width * 3.2);
-
-	ctx.translate(to.x, to.y);
-	ctx.rotate(angle);
-	ctx.beginPath();
-	ctx.moveTo(0, 0);
-	ctx.lineTo(-size, size * 0.48);
-	ctx.lineTo(-size * 0.72, 0);
-	ctx.lineTo(-size, -size * 0.48);
-	ctx.closePath();
-	ctx.fill();
 	ctx.restore();
+
+	drawArrowhead(ctx, to, angle, color, Math.max(8, width * 3.2), alpha);
 
 	if (label) {
 		ctx.save();
@@ -168,6 +199,93 @@ function drawArrow(
 	}
 }
 
+function drawProjectedCurve(
+	ctx: CanvasRenderingContext2D,
+	points: ProjectedPoint[],
+	color: string,
+	width: number,
+	options: {
+		alpha?: number;
+		dash?: number[];
+		close?: boolean;
+	} = {},
+) {
+	if (points.length < 2) return;
+
+	ctx.save();
+	ctx.globalAlpha = options.alpha ?? 1;
+	ctx.strokeStyle = color;
+	ctx.lineWidth = width;
+	ctx.lineCap = "round";
+	ctx.lineJoin = "round";
+	ctx.setLineDash(options.dash ?? []);
+
+	ctx.beginPath();
+	ctx.moveTo(points[0].x, points[0].y);
+
+	for (const point of points.slice(1)) {
+		ctx.lineTo(point.x, point.y);
+	}
+
+	if (options.close) {
+		ctx.closePath();
+	}
+
+	ctx.stroke();
+	ctx.restore();
+}
+
+function drawBivectorPatch(
+	ctx: CanvasRenderingContext2D,
+	width: number,
+	height: number,
+) {
+	const anchor = addVectors(
+		scaleVector(referenceVector, -0.34),
+		scaleVector(planeCompanionVector, -0.26),
+	);
+	const sideA = scaleVector(referenceVector, 0.28);
+	const sideB = scaleVector(planeCompanionVector, 0.28);
+
+	const p0 = project(getScenePoint(anchor), width, height);
+	const p1 = project(getScenePoint(addVectors(anchor, sideA)), width, height);
+	const p2 = project(
+		getScenePoint(addVectors(addVectors(anchor, sideA), sideB)),
+		width,
+		height,
+	);
+	const p3 = project(getScenePoint(addVectors(anchor, sideB)), width, height);
+
+	ctx.save();
+	ctx.fillStyle = "rgba(168, 85, 247, 0.22)";
+	ctx.strokeStyle = "rgba(216, 180, 254, 0.72)";
+	ctx.lineWidth = 1.2;
+
+	ctx.beginPath();
+	ctx.moveTo(p0.x, p0.y);
+	ctx.lineTo(p1.x, p1.y);
+	ctx.lineTo(p2.x, p2.y);
+	ctx.lineTo(p3.x, p3.y);
+	ctx.closePath();
+	ctx.fill();
+	ctx.stroke();
+
+	ctx.restore();
+
+	drawArrow(ctx, p0, p1, "rgba(216, 180, 254, 0.84)", 1.4, undefined, {
+		alpha: 0.85,
+	});
+	drawArrow(ctx, p1, p2, "rgba(216, 180, 254, 0.84)", 1.4, undefined, {
+		alpha: 0.85,
+	});
+
+	ctx.save();
+	ctx.fillStyle = "rgba(216, 180, 254, 0.78)";
+	ctx.font = "10px ui-monospace, SFMono-Regular, Menlo, monospace";
+	ctx.fillText("|B| = 1", p2.x + 5, p2.y - 5);
+	ctx.restore();
+}
+
 function drawBivectorPlane(
 	ctx: CanvasRenderingContext2D,
 	width: number,
@@ -177,8 +295,8 @@ function drawBivectorPlane(
 	const radius = 0.95;
 	const points: ProjectedPoint[] = [];
 
-	for (let index = 0; index <= 96; index += 1) {
-		const angle = (index / 96) * Math.PI * 2;
+	for (let index = 0; index <= 112; index += 1) {
+		const angle = (index / 112) * Math.PI * 2;
 		points.push(project(getPlanePoint(angle, radius), width, height));
 	}
 
@@ -214,6 +332,30 @@ function drawBivectorPlane(
 
 	ctx.restore();
 
+	const orientationStart = Math.PI * 0.2;
+	const orientationEnd = Math.PI * 0.54;
+	const orientationPoints: ProjectedPoint[] = [];
+
+	for (let index = 0; index <= 24; index += 1) {
+		const t = index / 24;
+		const angle =
+			orientationStart + (orientationEnd - orientationStart) * t;
+
+		orientationPoints.push(
+			project(getPlanePoint(angle, radius * 1.03), width, height),
+		);
+	}
+
+	drawProjectedCurve(ctx, orientationPoints, "rgba(216, 180, 254, 0.8)", 2, {
+		alpha: 0.8,
+	});
+
+	const end = orientationPoints[orientationPoints.length - 1];
+	const previous = orientationPoints[orientationPoints.length - 3];
+	const arrowAngle = Math.atan2(end.y - previous.y, end.x - previous.x);
+
+	drawArrowhead(ctx, end, arrowAngle, "rgba(216, 180, 254, 0.84)", 9, 0.84);
+
 	const labelPoint = project(
 		getPlanePoint(Math.PI * 0.18, radius * 1.1),
 		width,
@@ -227,8 +369,14 @@ function drawBivectorPlane(
 
 	ctx.fillStyle = "rgba(216, 180, 254, 0.72)";
 	ctx.font = "11px ui-monospace, SFMono-Regular, Menlo, monospace";
-	ctx.fillText("rotation plane", labelPoint.x + 22, labelPoint.y - 6);
+	ctx.fillText(
+		"oriented rotation plane",
+		labelPoint.x + 22,
+		labelPoint.y - 6,
+	);
 	ctx.restore();
+
+	drawBivectorPatch(ctx, width, height);
 }
 
 function drawVectorOrbit(
@@ -239,25 +387,15 @@ function drawVectorOrbit(
 	const radius = 1.05;
 	const points: ProjectedPoint[] = [];
 
-	for (let index = 0; index <= 112; index += 1) {
-		const angle = (index / 112) * Math.PI * 2;
+	for (let index = 0; index <= 128; index += 1) {
+		const angle = (index / 128) * Math.PI * 2;
 		points.push(project(getPlanePoint(angle, radius), width, height));
 	}
 
-	ctx.save();
-	ctx.strokeStyle = "rgba(248, 250, 252, 0.22)";
-	ctx.lineWidth = 1.2;
-	ctx.setLineDash([3, 7]);
-	ctx.beginPath();
-	ctx.moveTo(points[0].x, points[0].y);
-
-	for (const point of points.slice(1)) {
-		ctx.lineTo(point.x, point.y);
-	}
-
-	ctx.closePath();
-	ctx.stroke();
-	ctx.restore();
+	drawProjectedCurve(ctx, points, "rgba(248, 250, 252, 0.22)", 1.2, {
+		dash: [3, 7],
+		close: true,
+	});
 }
 
 function drawAngleArc(
@@ -278,19 +416,13 @@ function drawAngleArc(
 		);
 	}
 
-	ctx.save();
+	drawProjectedCurve(ctx, points, "rgba(52, 211, 153, 0.82)", 2);
 
-	ctx.strokeStyle = "rgba(52, 211, 153, 0.82)";
-	ctx.lineWidth = 2;
-	ctx.lineCap = "round";
-	ctx.beginPath();
-	ctx.moveTo(points[0].x, points[0].y);
+	const end = points[points.length - 1];
+	const previous = points[Math.max(0, points.length - 3)];
+	const arrowAngle = Math.atan2(end.y - previous.y, end.x - previous.x);
 
-	for (const point of points.slice(1)) {
-		ctx.lineTo(point.x, point.y);
-	}
-
-	ctx.stroke();
+	drawArrowhead(ctx, end, arrowAngle, "rgba(52, 211, 153, 0.92)", 8, 0.92);
 
 	const labelPoint = project(
 		getPlanePoint(normalizedAngle * 0.55, radius * 1.18),
@@ -298,75 +430,77 @@ function drawAngleArc(
 		height,
 	);
 
+	ctx.save();
 	ctx.fillStyle = "rgba(52, 211, 153, 0.92)";
 	ctx.font = "700 12px ui-monospace, SFMono-Regular, Menlo, monospace";
 	ctx.fillText("θ", labelPoint.x + 4, labelPoint.y - 4);
-
 	ctx.restore();
 }
 
-function drawProgressArrowhead(
+function drawRotorActionOrbit(
 	ctx: CanvasRenderingContext2D,
-	x: number,
-	y: number,
-	angle: number,
-	color: string,
-) {
-	ctx.save();
-	ctx.translate(x, y);
-	ctx.rotate(angle);
-	ctx.fillStyle = color;
-
-	ctx.beginPath();
-	ctx.moveTo(0, 0);
-	ctx.lineTo(-7, 4);
-	ctx.lineTo(-5, 0);
-	ctx.lineTo(-7, -4);
-	ctx.closePath();
-	ctx.fill();
-
-	ctx.restore();
-}
-
-function drawProgressCircle(
-	ctx: CanvasRenderingContext2D,
-	center: ProjectedPoint,
-	radius: number,
-	angle: number,
+	width: number,
+	height: number,
+	offsetAlongDualAxis: number,
+	rotorAngle: number,
 	label: string,
 	subLabel: string,
 	color: string,
 ) {
-	const sweep = getPositiveModuloAngle(Math.abs(angle));
-	const direction = angle >= 0 ? 1 : -1;
-	const start = -Math.PI / 2;
-	const end = start + direction * sweep;
-	const anticlockwise = direction < 0;
+	const radius = 0.34;
+	const fullCircle: ProjectedPoint[] = [];
 
-	ctx.save();
+	for (let index = 0; index <= 96; index += 1) {
+		const angle = (index / 96) * Math.PI * 2;
 
-	ctx.strokeStyle = "rgba(148, 163, 184, 0.28)";
-	ctx.lineWidth = 1.2;
-	ctx.beginPath();
-	ctx.arc(center.x, center.y, radius, 0, Math.PI * 2);
-	ctx.stroke();
-
-	ctx.strokeStyle = color;
-	ctx.lineWidth = 2.6;
-	ctx.lineCap = "round";
-
-	if (sweep > 0.0001) {
-		ctx.beginPath();
-		ctx.arc(center.x, center.y, radius, start, end, anticlockwise);
-		ctx.stroke();
-
-		const arrowX = center.x + Math.cos(end) * radius;
-		const arrowY = center.y + Math.sin(end) * radius;
-		const tangent = end + (direction > 0 ? Math.PI / 2 : -Math.PI / 2);
-
-		drawProgressArrowhead(ctx, arrowX, arrowY, tangent, color);
+		fullCircle.push(
+			project(
+				getOffsetPlanePoint(offsetAlongDualAxis, angle, radius),
+				width,
+				height,
+			),
+		);
 	}
 
+	drawProjectedCurve(ctx, fullCircle, "rgba(148, 163, 184, 0.28)", 1.1, {
+		close: true,
+	});
+
+	const sweep = getPositiveModuloAngle(Math.abs(rotorAngle));
+	const direction = rotorAngle >= 0 ? 1 : -1;
+	const steps = Math.max(8, Math.ceil(sweep * 28));
+	const progressPoints: ProjectedPoint[] = [];
+
+	for (let index = 0; index <= steps; index += 1) {
+		const t = index / steps;
+		const angle = direction * sweep * t;
+
+		progressPoints.push(
+			project(
+				getOffsetPlanePoint(offsetAlongDualAxis, angle, radius),
+				width,
+				height,
+			),
+		);
+	}
+
+	drawProjectedCurve(ctx, progressPoints, color, 2.5);
+
+	if (progressPoints.length > 2) {
+		const end = progressPoints[progressPoints.length - 1];
+		const previous = progressPoints[Math.max(0, progressPoints.length - 3)];
+		const arrowAngle = Math.atan2(end.y - previous.y, end.x - previous.x);
+
+		drawArrowhead(ctx, end, arrowAngle, color, 8, 1);
+	}
+
+	const center = project(
+		getScenePoint(scaleVector(axis, offsetAlongDualAxis)),
+		width,
+		height,
+	);
+
+	ctx.save();
 	ctx.textAlign = "center";
 	ctx.textBaseline = "middle";
 
@@ -381,7 +515,7 @@ function drawProgressCircle(
 	ctx.restore();
 }
 
-function drawRotorProgressCircles(
+function drawRotorActionOrbits(
 	ctx: CanvasRenderingContext2D,
 	width: number,
 	height: number,
@@ -390,34 +524,25 @@ function drawRotorProgressCircles(
 ) {
 	if (spin === 0) return;
 
-	const upperCenter = project(
-		getScenePoint(scaleVector(axis, 0.82)),
-		width,
-		height,
-	);
-	const lowerCenter = project(
-		getScenePoint(scaleVector(axis, -0.82)),
-		width,
-		height,
-	);
-	const radius = Math.max(22, Math.min(width, height) * 0.055);
 	const halfAngle = angle / 2;
 	const halfDegrees = Math.round((angle * 180) / Math.PI / 2);
 
-	drawProgressCircle(
+	drawRotorActionOrbit(
 		ctx,
-		upperCenter,
-		radius,
+		width,
+		height,
+		0.72,
 		-halfAngle,
 		"R",
 		`−${halfDegrees}°`,
 		"#a78bfa",
 	);
 
-	drawProgressCircle(
+	drawRotorActionOrbit(
 		ctx,
-		lowerCenter,
-		radius,
+		width,
+		height,
+		-0.72,
 		halfAngle,
 		"R̃",
 		`+${halfDegrees}°`,
@@ -573,7 +698,7 @@ export function SpinScene({ particle }: SpinSceneProps) {
 				item.color,
 				1.7,
 				item.label,
-				{ alpha: 0.8 },
+				{ alpha: 0.72 },
 			);
 		}
 
@@ -587,10 +712,10 @@ export function SpinScene({ particle }: SpinSceneProps) {
 			currentContext,
 			origin,
 			axisTip,
-			"rgba(244, 114, 182, 0.45)",
-			1.7,
+			"rgba(244, 114, 182, 0.38)",
+			1.6,
 			"dual axis",
-			{ alpha: 0.72 },
+			{ alpha: 0.62 },
 		);
 
 		drawArrow(
@@ -624,7 +749,7 @@ export function SpinScene({ particle }: SpinSceneProps) {
 			particle.spin === 0 ? "s" : "v(θ)",
 		);
 
-		drawRotorProgressCircles(
+		drawRotorActionOrbits(
 			currentContext,
 			width,
 			height,
@@ -739,7 +864,7 @@ export function SpinScene({ particle }: SpinSceneProps) {
 				</div>
 				<div>
 					<span>Bivector</span>
-					<strong>B = rotation plane</strong>
+					<strong>B = unit oriented plane</strong>
 				</div>
 				<div>
 					<span>Return</span>
