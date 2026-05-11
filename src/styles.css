@@ -8,6 +8,9 @@
 		-apple-system,
 		BlinkMacSystemFont,
 		"Segoe UI",
+		Roboto,
+		Helvetica,
+		Arial,
 		sans-serif;
 	font-synthesis: none;
 	text-rendering: optimizeLegibility;
@@ -44,12 +47,12 @@ body {
 	background:
 		radial-gradient(
 			circle at 50% -10%,
-			rgba(79, 70, 229, 0.16),
+			rgba(79, 70, 229, 0.14),
 			transparent 34rem
 		),
 		radial-gradient(
 			circle at 100% 15%,
-			rgba(34, 211, 238, 0.08),
+			rgba(34, 211, 238, 0.07),
 			transparent 28rem
 		),
 		var(--bg);
@@ -75,6 +78,8 @@ code {
 		"Liberation Mono", monospace;
 }
 
+/* Home page */
+
 .home-page {
 	display: grid;
 	width: min(1500px, calc(100vw - 32px));
@@ -82,7 +87,7 @@ code {
 	margin: 0 auto;
 	padding: 18px 0;
 	grid-template-rows: auto 1fr;
-	gap: 18px;
+	gap: 16px;
 	overflow: hidden;
 }
 
@@ -91,8 +96,8 @@ code {
 	align-items: center;
 	justify-content: space-between;
 	gap: 24px;
-	border-bottom: 1px solid var(--border);
-	padding-bottom: 16px;
+	border-bottom: 1px solid rgba(148, 163, 184, 0.22);
+	padding-bottom: 14px;
 }
 
 .brand-lockup {
@@ -104,39 +109,40 @@ code {
 
 .logo-mark {
 	display: grid;
-	width: 46px;
-	height: 46px;
+	width: 42px;
+	height: 42px;
 	flex: 0 0 auto;
 	place-items: center;
 	border: 1px solid var(--border-strong);
-	border-radius: 14px;
+	border-radius: 6px;
 	background: #090b12;
 	color: var(--text);
 }
 
 .home-header h1 {
 	margin: 0;
-	font-size: clamp(1.35rem, 2.4vw, 2.15rem);
-	line-height: 1;
-	letter-spacing: -0.06em;
+	font-size: clamp(1.2rem, 2vw, 1.75rem);
+	font-weight: 760;
+	line-height: 1.05;
+	letter-spacing: -0.03em;
 }
 
 .home-header p {
 	max-width: 760px;
-	margin: 6px 0 0;
+	margin: 5px 0 0;
 	color: var(--muted);
 	line-height: 1.45;
-	font-size: 0.94rem;
+	font-size: 0.9rem;
 }
 
 .header-thesis {
 	display: grid;
 	gap: 5px;
-	max-width: 410px;
+	max-width: 400px;
 	border: 1px solid var(--border);
-	border-radius: 16px;
+	border-radius: 8px;
 	background: rgba(11, 13, 20, 0.72);
-	padding: 12px 14px;
+	padding: 11px 13px;
 }
 
 .header-thesis span,
@@ -154,12 +160,12 @@ code {
 .header-thesis span,
 .eyebrow {
 	color: #93c5fd;
-	font-size: 0.72rem;
-	font-weight: 900;
+	font-size: 0.68rem;
+	font-weight: 850;
 }
 
 .header-thesis strong {
-	font-size: 0.88rem;
+	font-size: 0.82rem;
 	line-height: 1.35;
 	color: #dbeafe;
 }
@@ -172,14 +178,14 @@ code {
 	display: grid;
 	height: 100%;
 	grid-template-rows: auto repeat(5, minmax(0, 1fr)) auto;
-	gap: 8px;
+	gap: 6px;
 }
 
 .chart-title-row,
 .chart-row {
 	display: grid;
 	grid-template-columns: 150px repeat(4, minmax(0, 1fr));
-	gap: 8px;
+	gap: 6px;
 	min-height: 0;
 }
 
@@ -190,11 +196,11 @@ code {
 	align-items: center;
 	justify-content: center;
 	border: 1px solid var(--border);
-	border-radius: 14px;
+	border-radius: 8px;
 	background: #080a10;
 	color: var(--muted);
-	font-size: 0.7rem;
-	font-weight: 900;
+	font-size: 0.68rem;
+	font-weight: 800;
 }
 
 .chart-row-label {
@@ -206,7 +212,7 @@ code {
 .particle-slot,
 .sm-particle-card {
 	min-height: 0;
-	border-radius: 18px;
+	border-radius: 6px;
 }
 
 .particle-slot.empty {
@@ -218,15 +224,14 @@ code {
 	position: relative;
 	display: grid;
 	grid-template-rows: 1fr auto auto;
-	align-items: end;
+	align-items: center;
 	overflow: hidden;
 	border: 1px solid var(--border);
 	background: #0b0d14;
 	color: var(--text);
-	padding: 13px;
-	text-align: left;
+	padding: 12px;
+	text-align: center;
 	transition:
-		transform 160ms ease,
 		border-color 160ms ease,
 		background 160ms ease;
 }
@@ -242,8 +247,7 @@ code {
 
 .sm-particle-card:hover,
 .sm-particle-card.selected {
-	transform: translateY(-2px);
-	border-color: var(--border-strong);
+	border-color: rgba(248, 250, 252, 0.42);
 	background: #111522;
 }
 
@@ -268,27 +272,34 @@ code {
 .sm-meta {
 	position: relative;
 	z-index: 1;
+	display: block;
+	width: 100%;
 }
 
 .sm-symbol {
-	align-self: start;
-	font-size: clamp(1.7rem, 4vw, 3rem);
-	font-weight: 950;
-	line-height: 1;
-	letter-spacing: -0.08em;
+	align-self: center;
 	color: var(--text);
+	font-size: clamp(1.55rem, 3.4vw, 2.55rem);
+	font-weight: 780;
+	line-height: 1;
+	letter-spacing: -0.035em;
+	text-align: center;
 }
 
 .sm-name {
 	color: var(--text);
-	font-weight: 800;
-	line-height: 1.1;
+	font-size: 0.88rem;
+	font-weight: 680;
+	line-height: 1.15;
+	text-align: center;
 }
 
 .sm-meta {
 	color: var(--muted);
-	font-size: 0.64rem;
-	font-weight: 900;
+	font-size: 0.6rem;
+	font-weight: 800;
+	line-height: 1.2;
+	text-align: center;
 }
 
 .chart-legend {
@@ -305,15 +316,15 @@ code {
 	align-items: center;
 	gap: 7px;
 	color: var(--muted);
-	font-size: 0.68rem;
-	font-weight: 900;
+	font-size: 0.64rem;
+	font-weight: 800;
 }
 
 .legend-item::before {
 	display: inline-block;
 	width: 8px;
 	height: 8px;
-	border-radius: 999px;
+	border-radius: 2px;
 	content: "";
 }
 
@@ -336,9 +347,14 @@ code {
 /* Particle page */
 
 .particle-page {
+	display: grid;
 	width: min(1440px, calc(100vw - 32px));
+	height: 100svh;
 	margin: 0 auto;
-	padding: 24px 0 56px;
+	padding: 16px 0;
+	grid-template-rows: auto auto 1fr;
+	gap: 12px;
+	overflow: hidden;
 }
 
 .top-nav {
@@ -346,12 +362,12 @@ code {
 	align-items: center;
 	justify-content: space-between;
 	gap: 16px;
-	margin-bottom: 22px;
+	min-height: 0;
 }
 
 .particle-nav {
 	display: flex;
-	gap: 10px;
+	gap: 8px;
 }
 
 .ghost-button,
@@ -361,73 +377,81 @@ code {
 	justify-content: center;
 	gap: 8px;
 	border: 1px solid var(--border);
-	border-radius: 999px;
+	border-radius: 6px;
 	background: #090b12;
 	color: var(--text);
-	padding: 10px 14px;
-	font-weight: 800;
+	padding: 8px 11px;
+	font-size: 0.88rem;
+	font-weight: 680;
 	transition:
-		transform 160ms ease,
 		border-color 160ms ease,
 		background 160ms ease;
 }
 
 .ghost-button:hover,
 .scene-controls button:hover {
-	transform: translateY(-1px);
 	border-color: var(--border-strong);
 	background: #111522;
 }
 
 .particle-hero {
-	margin-bottom: 22px;
+	display: grid;
+	gap: 6px;
+	margin: 0;
 }
 
 .eyebrow {
-	margin: 0 0 10px;
+	margin: 0;
 }
 
 .particle-hero h1 {
 	display: flex;
 	align-items: center;
-	gap: 18px;
+	gap: 14px;
 	margin: 0;
-	font-size: clamp(2.8rem, 7vw, 6rem);
-	line-height: 0.9;
-	letter-spacing: -0.08em;
+	font-size: clamp(1.8rem, 4vw, 3.2rem);
+	font-weight: 760;
+	line-height: 0.95;
+	letter-spacing: -0.045em;
 }
 
 .particle-hero h1 span {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	width: 82px;
-	height: 82px;
+	width: 54px;
+	height: 54px;
 	border: 1px solid var(--border);
-	border-radius: 22px;
+	border-radius: 8px;
 	background: #090b12;
-	font-size: 3rem;
+	font-size: 2rem;
+	font-weight: 720;
+	letter-spacing: -0.035em;
 }
 
 .particle-hero p {
-	max-width: 900px;
+	max-width: 960px;
+	margin: 0;
 	color: var(--muted);
-	line-height: 1.65;
+	font-size: 0.88rem;
+	line-height: 1.45;
 }
 
 .particle-layout {
 	display: grid;
-	grid-template-columns: minmax(240px, 0.72fr) minmax(440px, 1.35fr) minmax(
-			260px,
-			0.82fr
+	min-height: 0;
+	grid-template-columns: minmax(220px, 0.68fr) minmax(420px, 1.45fr) minmax(
+			240px,
+			0.78fr
 		);
-	gap: 14px;
+	gap: 12px;
 	align-items: stretch;
 }
 
 .glass-panel {
+	min-height: 0;
 	border: 1px solid var(--border);
-	border-radius: 24px;
+	border-radius: 8px;
 	background: var(--panel);
 	box-shadow: 0 18px 60px rgba(0, 0, 0, 0.24);
 }
@@ -435,35 +459,45 @@ code {
 .fact-panel,
 .education-panel,
 .spin-scene {
-	padding: 18px;
+	padding: 14px;
+}
+
+.fact-panel,
+.education-panel {
+	overflow: auto;
 }
 
 .fact-panel p,
 .education-panel p {
 	color: var(--muted);
-	line-height: 1.65;
+	font-size: 0.88rem;
+	line-height: 1.5;
 }
 
 .fact-panel h2,
 .education-panel h2,
 .scene-header h2 {
 	margin: 0;
-	line-height: 1;
-	letter-spacing: -0.04em;
+	font-size: 1.12rem;
+	font-weight: 720;
+	line-height: 1.05;
+	letter-spacing: -0.025em;
 }
 
 .particle-emblem {
 	display: grid;
-	width: 104px;
-	height: 104px;
+	width: 78px;
+	height: 78px;
 	place-items: center;
 	border: 1px solid var(--border);
-	border-radius: 24px;
-	margin-bottom: 18px;
+	border-radius: 8px;
+	margin-bottom: 13px;
 	background: #090b12;
-	font-size: 3.5rem;
-	font-weight: 950;
-	letter-spacing: -0.08em;
+	font-size: 2.55rem;
+	font-weight: 760;
+	line-height: 1;
+	letter-spacing: -0.035em;
+	text-align: center;
 }
 
 .particle-emblem.quark {
@@ -484,8 +518,8 @@ code {
 
 .fact-list {
 	display: grid;
-	gap: 10px;
-	margin: 22px 0;
+	gap: 8px;
+	margin: 16px 0;
 }
 
 .fact-list div {
@@ -493,74 +527,82 @@ code {
 	justify-content: space-between;
 	gap: 16px;
 	border-bottom: 1px solid rgba(148, 163, 184, 0.14);
-	padding-bottom: 10px;
+	padding-bottom: 8px;
 }
 
 .fact-list dt {
 	color: var(--muted);
+	font-size: 0.84rem;
 }
 
 .fact-list dd {
 	margin: 0;
-	font-weight: 800;
+	font-size: 0.86rem;
+	font-weight: 720;
+}
+
+.fact-panel h3 {
+	margin: 0 0 10px;
+	font-size: 0.96rem;
+	font-weight: 720;
 }
 
 .pill-row {
 	display: flex;
 	flex-wrap: wrap;
-	gap: 8px;
+	gap: 6px;
 }
 
 .pill {
-	border: 1px solid var(--border);
-	border-radius: 999px;
-	background: #090b12;
-	padding: 7px 9px;
+	border: 1px solid rgba(148, 163, 184, 0.2);
+	border-radius: 6px;
+	background: #080a10;
+	padding: 5px 7px;
 	color: #cbd5e1;
-	font-size: 0.66rem;
-	font-weight: 800;
+	font-size: 0.6rem;
+	font-weight: 760;
 }
 
 .spin-scene {
-	display: flex;
-	min-height: 650px;
-	flex-direction: column;
+	display: grid;
+	min-height: 0;
+	grid-template-rows: auto 1fr auto auto auto;
 }
 
 .scene-header {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
-	gap: 16px;
+	gap: 14px;
 }
 
 .angle-badge {
 	display: grid;
-	min-width: 124px;
+	min-width: 116px;
 	place-items: center;
 	border: 1px solid var(--border);
-	border-radius: 16px;
+	border-radius: 8px;
 	background: #090b12;
-	padding: 10px;
+	padding: 8px;
 }
 
 .angle-badge span {
 	color: var(--muted);
-	font-size: 0.78rem;
+	font-size: 0.72rem;
 }
 
 .angle-badge strong {
-	font-size: 1.18rem;
+	font-size: 1.05rem;
+	font-weight: 720;
 }
 
 .canvas-wrap {
 	position: relative;
-	flex: 1;
-	min-height: 440px;
-	margin: 16px 0;
+	min-height: 0;
+	margin: 12px 0;
 	overflow: hidden;
 	border: 1px solid var(--border);
-	border-radius: 20px;
+	border-radius: 8px;
 	background: #05060a;
 }
 
@@ -573,7 +615,7 @@ code {
 .scene-controls {
 	display: grid;
 	grid-template-columns: auto auto minmax(0, 1fr);
-	gap: 10px;
+	gap: 8px;
 	align-items: center;
 }
 
@@ -582,45 +624,115 @@ code {
 	accent-color: var(--quark);
 }
 
+.sandwich-readout {
+	display: grid;
+	grid-template-columns: 76px minmax(0, 1fr) 76px;
+	gap: 10px;
+	align-items: center;
+	border: 1px solid var(--border);
+	border-radius: 8px;
+	background: #090b12;
+	padding: 10px;
+}
+
+.rotor-chip {
+	display: grid;
+	min-height: 58px;
+	place-items: center;
+	gap: 2px;
+	border: 1px solid rgba(148, 163, 184, 0.22);
+	border-radius: 8px;
+	background: #05060a;
+}
+
+.rotor-chip.left {
+	color: var(--quark);
+}
+
+.rotor-chip.right {
+	color: var(--lepton);
+}
+
+.rotor-chip.scalar {
+	color: var(--scalar);
+}
+
+.rotor-symbol {
+	color: var(--text);
+	font-family:
+		ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+		"Liberation Mono", monospace;
+	font-size: 1rem;
+	font-weight: 800;
+}
+
+.rotor-angle {
+	color: var(--muted);
+	font-family:
+		ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+		"Liberation Mono", monospace;
+	font-size: 0.72rem;
+}
+
+.sandwich-center {
+	display: grid;
+	gap: 4px;
+	text-align: center;
+}
+
+.sandwich-center code {
+	color: var(--text);
+	font-size: 1rem;
+	font-weight: 800;
+}
+
+.sandwich-center span {
+	color: var(--muted);
+	font-size: 0.78rem;
+	line-height: 1.35;
+}
+
 .formula-card,
 .formula-strip {
 	display: block;
 	border: 1px solid var(--border);
-	border-radius: 16px;
+	border-radius: 8px;
 	background: #090b12;
 	color: #bae6fd;
-	padding: 13px;
+	padding: 10px;
 }
 
 .formula-card {
-	margin: 18px 0;
+	margin: 13px 0;
 }
 
 .formula-strip {
 	display: grid;
-	gap: 8px;
-	margin-top: 14px;
+	gap: 6px;
+	margin-top: 10px;
+	font-size: 0.86rem;
 }
 
 .formula-strip span {
 	color: var(--muted);
-	font-size: 0.86rem;
+	font-size: 0.78rem;
 }
 
 .note-card {
 	display: grid;
-	gap: 8px;
-	margin-top: 20px;
+	gap: 7px;
+	margin-top: 14px;
 	border: 1px solid rgba(244, 114, 182, 0.22);
-	border-radius: 18px;
+	border-radius: 8px;
 	background: rgba(244, 114, 182, 0.06);
-	padding: 14px;
+	padding: 11px;
 	color: #fce7f3;
+	font-size: 0.84rem;
 }
 
 .note-card span {
 	color: #fbcfe8;
-	line-height: 1.6;
+	line-height: 1.5;
 }
 
 .muted {
@@ -628,7 +740,8 @@ code {
 }
 
 @media (max-width: 1100px) {
-	.home-page {
+	.home-page,
+	.particle-page {
 		height: auto;
 		min-height: 100svh;
 		overflow: visible;
@@ -666,6 +779,15 @@ code {
 	.spin-scene {
 		min-height: 560px;
 	}
+
+	.canvas-wrap {
+		min-height: 360px;
+	}
+
+	.fact-panel,
+	.education-panel {
+		overflow: visible;
+	}
 }
 
 @media (max-width: 720px) {
@@ -681,7 +803,7 @@ code {
 
 	.home-header h1,
 	.particle-hero h1 {
-		font-size: clamp(2rem, 11vw, 4rem);
+		font-size: clamp(1.8rem, 10vw, 3rem);
 	}
 
 	.particle-hero h1 {
@@ -706,5 +828,17 @@ code {
 
 	.scene-controls input {
 		grid-column: 1 / -1;
+	}
+
+	.sandwich-readout {
+		grid-template-columns: 1fr;
+	}
+
+	.sm-particle-card {
+		padding: 10px;
+	}
+
+	.sm-name {
+		font-size: 0.78rem;
 	}
 }

@@ -115,126 +115,6 @@ function drawPlane(
 	ctx.restore();
 }
 
-function drawRotorDial(
-	ctx: CanvasRenderingContext2D,
-	x: number,
-	y: number,
-	radius: number,
-	angle: number,
-	label: string,
-	subLabel: string,
-	color: string,
-) {
-	ctx.save();
-
-	ctx.strokeStyle = "rgba(148, 163, 184, 0.35)";
-	ctx.lineWidth = 1;
-	ctx.beginPath();
-	ctx.arc(x, y, radius, 0, Math.PI * 2);
-	ctx.stroke();
-
-	ctx.strokeStyle = color;
-	ctx.lineWidth = 3;
-	ctx.beginPath();
-	ctx.arc(x, y, radius, -Math.PI / 2, -Math.PI / 2 + angle);
-	ctx.stroke();
-
-	const needle = -Math.PI / 2 + angle;
-
-	ctx.fillStyle = color;
-	ctx.beginPath();
-	ctx.arc(
-		x + Math.cos(needle) * radius,
-		y + Math.sin(needle) * radius,
-		4,
-		0,
-		Math.PI * 2,
-	);
-	ctx.fill();
-
-	ctx.textAlign = "center";
-	ctx.textBaseline = "middle";
-
-	ctx.fillStyle = "#f8fafc";
-	ctx.font = "700 13px ui-monospace, SFMono-Regular, Menlo, monospace";
-	ctx.fillText(label, x, y - 3);
-
-	ctx.fillStyle = "#94a3b8";
-	ctx.font = "10px ui-monospace, SFMono-Regular, Menlo, monospace";
-	ctx.fillText(subLabel, x, y + 13);
-
-	ctx.restore();
-}
-
-function drawSandwichDiagram(
-	ctx: CanvasRenderingContext2D,
-	width: number,
-	height: number,
-	angle: number,
-	spin: Particle["spin"],
-) {
-	const boxWidth = Math.min(500, width - 32);
-	const boxHeight = 112;
-	const x = width / 2 - boxWidth / 2;
-	const y = height - boxHeight - 18;
-
-	ctx.save();
-
-	ctx.fillStyle = "rgba(2, 6, 23, 0.84)";
-	ctx.strokeStyle = "rgba(148, 163, 184, 0.22)";
-	ctx.lineWidth = 1;
-	ctx.beginPath();
-	ctx.roundRect(x, y, boxWidth, boxHeight, 8);
-	ctx.fill();
-	ctx.stroke();
-
-	if (spin === 0) {
-		ctx.textAlign = "center";
-		ctx.textBaseline = "middle";
-
-		ctx.fillStyle = "#f8fafc";
-		ctx.font = "700 15px ui-monospace, SFMono-Regular, Menlo, monospace";
-		ctx.fillText("s′ = s", width / 2, y + 42);
-
-		ctx.fillStyle = "#94a3b8";
-		ctx.font = "12px ui-sans-serif, system-ui";
-		ctx.fillText(
-			"spin-0 scalar state is invariant under spatial rotation",
-			width / 2,
-			y + 70,
-		);
-
-		ctx.restore();
-		return;
-	}
-
-	const halfAngle = angle / 2;
-	const leftX = x + 76;
-	const rightX = x + boxWidth - 76;
-	const centerX = x + boxWidth / 2;
-	const dialY = y + 42;
-
-	drawRotorDial(ctx, leftX, dialY, 25, -halfAngle, "R", "−θ/2", "#a78bfa");
-	drawRotorDial(ctx, rightX, dialY, 25, halfAngle, "R̃", "+θ/2", "#22d3ee");
-
-	ctx.textAlign = "center";
-	ctx.textBaseline = "middle";
-
-	ctx.fillStyle = "#f8fafc";
-	ctx.font = "800 18px ui-monospace, SFMono-Regular, Menlo, monospace";
-	ctx.fillText("v′ = R v R̃", centerX, y + 42);
-
-	ctx.fillStyle = "#94a3b8";
-	ctx.font = "12px ui-sans-serif, system-ui";
-	ctx.fillText(
-		"the vector is sandwiched between two half-angle rotor actions",
-		centerX,
-		y + 82,
-	);
-
-	ctx.restore();
-}
-
 function getAngleLimit(spin: Particle["spin"]) {
 	return spin === 0.5 ? Math.PI * 4 : Math.PI * 2;
 }
@@ -428,25 +308,16 @@ export function SpinScene({ particle }: SpinSceneProps) {
 		);
 		currentContext.stroke();
 		currentContext.restore();
-
-		drawSandwichDiagram(
-			currentContext,
-			width,
-			height,
-			angle,
-			particle.spin,
-		);
 	}, [angle, particle.spin, rotatedVector]);
 
 	const degrees = (angle * 180) / Math.PI;
 	const displayAngle = Math.round(degrees);
 	const sign = particle.spin === 0.5 ? spinorSign(angle) : "+state";
-	const halfAngleDegrees = Math.round(displayAngle / 2);
 	const rotorLabel =
 		particle.spin === 0
 			? "scalar invariant"
 			: particle.spin === 1
-				? `R uses ±${halfAngleDegrees}° in the sandwich`
+				? "integer-spin state returns after 360°"
 				: formatMultivector(rotor);
 
 	return (
@@ -502,11 +373,44 @@ export function SpinScene({ particle }: SpinSceneProps) {
 				/>
 			</div>
 
+			<div className="sandwich-readout">
+				<div
+					className={`rotor-chip left ${particle.spin === 0 ? "scalar" : ""}`}
+				>
+					<span className="rotor-symbol">
+						{particle.spin === 0 ? "s" : "R"}
+					</span>
+					<span className="rotor-angle">
+						{particle.spin === 0 ? "scalar" : "−θ/2"}
+					</span>
+				</div>
+
+				<div className="sandwich-center">
+					<code>{particle.spin === 0 ? "s′ = s" : "v′ = R v R̃"}</code>
+					<span>
+						{particle.spin === 0
+							? "spin-0 scalar state is invariant under spatial rotation"
+							: "the vector is sandwiched between two half-angle rotor actions"}
+					</span>
+				</div>
+
+				<div
+					className={`rotor-chip right ${particle.spin === 0 ? "scalar" : ""}`}
+				>
+					<span className="rotor-symbol">
+						{particle.spin === 0 ? "s′" : "R̃"}
+					</span>
+					<span className="rotor-angle">
+						{particle.spin === 0 ? "same" : "+θ/2"}
+					</span>
+				</div>
+			</div>
+
 			<div className="formula-strip">
 				<code>
 					{particle.spin === 0
 						? "s′ = s"
-						: "v′ = RvR̃,   R = e^{-Bθ/2},   R̃ = e^{Bθ/2}"}
+						: "R = e^{-Bθ/2},   R̃ = e^{Bθ/2}"}
 				</code>
 				<span>{rotorLabel}</span>
 			</div>
