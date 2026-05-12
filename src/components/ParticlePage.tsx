@@ -45,7 +45,7 @@ export function ParticlePage({
 				</div>
 			</nav>
 
-			<section className="particle-hero">
+			{/* <section className="particle-hero">
 				<p className="eyebrow">Selected particle</p>
 				<h1>
 					{particle.name}
@@ -57,7 +57,7 @@ export function ParticlePage({
 					algebra objects first: vectors, bivectors, rotors, and
 					spinors.
 				</p>
-			</section>
+			</section> */}
 
 			<div className="particle-layout">
 				<ParticleFactPanel particle={particle} />
